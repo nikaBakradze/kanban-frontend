@@ -119,7 +119,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, Number(task.id || task._id))}
+                  onDrop={(e: any) => handleDrop(e, Number(col.id || col._id))}
                   onClick={() => setSelectedTask(task)}
                   className="bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg shadow-sm hover:text-[#635FC7] cursor-pointer transition-colors group"
                 >
