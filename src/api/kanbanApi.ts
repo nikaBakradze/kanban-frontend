@@ -26,6 +26,11 @@ export const createTask = async (data: { title: string; description?: string; co
   return response.data;
 };
 
+export const updateTask = async (id: number, data: { title?: string; description?: string; column_id?: number; status?: string }) => {
+  const response = await API.put(`/api/tasks/${id}`, data);
+  return response.data;
+};
+
 export const toggleSubtask = async (id: number, is_completed: boolean) => {
   const response = await API.patch(`/api/tasks/subtask/${id}`, { is_completed });
   return response.data;
