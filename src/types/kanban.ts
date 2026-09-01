@@ -1,8 +1,8 @@
 export interface Subtask {
-  id: number;
+  id?: number;
   title: string;
   is_completed: boolean;
-  task_id: number;
+  task_id?: number;
 }
 
 export interface Task {

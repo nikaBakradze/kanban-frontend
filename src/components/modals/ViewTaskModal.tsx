@@ -187,7 +187,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
 
                   return (
                     <motion.div
-                      key={st.id || st._id || index}
+                      key={st.id || index}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
                       onClick={() => handleToggleSubtask(index)}

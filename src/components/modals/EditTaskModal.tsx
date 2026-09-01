@@ -38,7 +38,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
   };
 
   const handleAddSubtask = () => {
-    setSubtasks([...subtasks, { id: 0, task_id: task?.id ?? 0, title: '', is_completed: false }]);
+    setSubtasks([...subtasks, { title: '', is_completed: false }]);
   };
 
   const handleRemoveSubtask = (index: number) => {

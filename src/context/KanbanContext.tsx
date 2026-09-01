@@ -82,14 +82,28 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const updateTaskInBoard = useCallback((task: Task) => {
     updateBoardState((board) => {
-      const columns = board.columns.map((column) => ({
-        ...column,
-        tasks: column.tasks.filter((item) => item.id !== task.id),
-      }));
-      const nextColumns = columns.map((column) => column.id === task.column_id
-        ? { ...column, tasks: [...column.tasks, task].sort((a, b) => a.position - b.position) }
-        : column);
-      return { ...board, columns: nextColumns };
+      const targetColumn = board.columns.find((column) => column.id === task.column_id);
+      if (!targetColumn) return board;
+
+      return {
+        ...board,
+        columns: board.columns.map((column) => {
+          const remaining = column.tasks.filter((item) => item.id !== task.id);
+          if (column.id !== task.column_id) {
+            return {
+              ...column,
+              tasks: remaining.map((item, index) => ({ ...item, position: index })),
+            };
+          }
+
+          const position = Math.max(0, Math.min(task.position, remaining.length));
+          remaining.splice(position, 0, task);
+          return {
+            ...column,
+            tasks: remaining.map((item, index) => ({ ...item, position: index })),
+          };
+        }),
+      };
     });
   }, [updateBoardState]);
 

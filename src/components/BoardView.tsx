@@ -10,14 +10,27 @@ interface BoardViewProps {
   onOpenCreateBoardModal: () => void;
 }
 
+interface DragState {
+  sourceColumnId: number;
+  taskId: number;
+}
+
+interface DropTarget {
+  columnId: number;
+  taskId: number | null;
+  after: boolean;
+}
+
 export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOpenCreateBoardModal }) => {
   const { activeBoard, updateTaskInBoard, loading } = useKanban();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
-  const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
+  const [movingTaskId, setMovingTaskId] = useState<number | null>(null);
+  const dragState = useRef<DragState | null>(null);
+  const pointerStart = useRef<{ drag: DragState; x: number; y: number } | null>(null);
   const pointerDragging = useRef(false);
   const suppressClick = useRef(false);
-  const pointerTargetColumn = useRef<number | null>(null);
+  const pointerTarget = useRef<DropTarget | null>(null);
 
   const getColumnDotColor = (title: string, index: number) => {
     const cleanTitle = title.trim().toUpperCase();
@@ -29,88 +42,171 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     return fallbackColors[index % fallbackColors.length];
   };
 
-  const handleDragStart = (e: React.DragEvent, taskId: number) => {
-    e.dataTransfer.setData('taskId', taskId.toString());
-    e.dataTransfer.effectAllowed = 'move';
+  const getDropTargetAtPoint = (x: number, y: number): DropTarget | null => {
+    const element = document.elementFromPoint(x, y);
+    const columnElement = element?.closest<HTMLElement>('[data-column-id]');
+    if (!columnElement) return null;
+
+    const columnId = Number(columnElement.dataset.columnId);
+    if (!Number.isInteger(columnId)) return null;
+
+    const taskElement = element?.closest<HTMLElement>('[data-task-id]');
+    if (!taskElement || !columnElement.contains(taskElement)) {
+      const taskElements = Array.from(columnElement.querySelectorAll<HTMLElement>('[data-task-id]'));
+      const firstTaskAfterPointer = taskElements.find((candidate) => {
+        const rect = candidate.getBoundingClientRect();
+        return y < rect.top + rect.height / 2;
+      });
+      if (firstTaskAfterPointer) {
+        return { columnId, taskId: Number(firstTaskAfterPointer.dataset.taskId), after: false };
+      }
+      return { columnId, taskId: null, after: true };
+    }
+
+    const taskId = Number(taskElement.dataset.taskId);
+    if (!Number.isInteger(taskId)) return { columnId, taskId: null, after: true };
+    const rect = taskElement.getBoundingClientRect();
+    return { columnId, taskId, after: y >= rect.top + rect.height / 2 };
   };
 
-  const handlePointerDown = (e: React.PointerEvent, taskId: number) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    pointerStart.current = { id: taskId, x: e.clientX, y: e.clientY };
-    pointerDragging.current = false;
-    pointerTargetColumn.current = null;
-    e.currentTarget.setPointerCapture(e.pointerId);
+  const getDropPosition = (drag: DragState, target: DropTarget): number | null => {
+    if (!activeBoard) return null;
+    const targetColumn = activeBoard.columns.find((column) => column.id === target.columnId);
+    if (!targetColumn) return null;
+
+    const remaining = targetColumn.tasks.filter((task) => task.id !== drag.taskId);
+    if (target.taskId === null) return remaining.length;
+    if (target.taskId === drag.taskId) {
+      return targetColumn.tasks.findIndex((task) => task.id === drag.taskId);
+    }
+
+    const targetIndex = remaining.findIndex((task) => task.id === target.taskId);
+    if (targetIndex < 0) return remaining.length;
+    return targetIndex + (target.after ? 1 : 0);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    const start = pointerStart.current;
-    if (!start) return;
-    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
-    pointerDragging.current = true;
-    suppressClick.current = true;
-    setDraggedTaskId(start.id);
-    const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-column-id]');
-    pointerTargetColumn.current = target ? Number(target.getAttribute('data-column-id')) : null;
-  };
-
-  const finishPointerDrag = async () => {
-    const start = pointerStart.current;
-    const wasDragging = pointerDragging.current;
-    const targetColumnId = pointerTargetColumn.current;
-    pointerStart.current = null;
-    pointerDragging.current = false;
-    pointerTargetColumn.current = null;
-    setDraggedTaskId(null);
-    if (!wasDragging || !targetColumnId || !activeBoard) return;
-
-    const sourceColumn = activeBoard.columns.find((column) => column.tasks.some((task) => task.id === start.id));
-    const targetColumn = activeBoard.columns.find((column) => column.id === targetColumnId);
-    const movedTask = sourceColumn?.tasks.find((task) => task.id === start.id);
-    if (!movedTask || !targetColumn) return;
+  const moveTask = async (drag: DragState, target: DropTarget) => {
+    if (!activeBoard || movingTaskId !== null) return;
+    const sourceColumn = activeBoard.columns.find((column) => column.id === drag.sourceColumnId);
+    const movedTask = sourceColumn?.tasks.find((task) => task.id === drag.taskId);
+    const targetPosition = getDropPosition(drag, target);
+    if (!movedTask || targetPosition === null) return;
+    if (movedTask.column_id === target.columnId && movedTask.position === targetPosition) return;
 
     try {
-      const targetPosition = movedTask.column_id === targetColumnId
-        ? Math.max(0, targetColumn.tasks.length - 1)
-        : targetColumn.tasks.length;
+      setMovingTaskId(movedTask.id);
       const updatedTask = await updateTask(movedTask.id, {
-        column_id: targetColumnId,
+        column_id: target.columnId,
         position: targetPosition,
       });
       updateTaskInBoard(updatedTask);
     } catch (error) {
       console.error('Failed to move task:', error);
       alert('Failed to move task.');
+    } finally {
+      setMovingTaskId(null);
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, sourceColumnId: number, taskId: number) => {
+    const drag = { sourceColumnId, taskId };
+    dragState.current = drag;
+    setDraggedTaskId(taskId);
+    e.dataTransfer.setData('sourceColumnId', sourceColumnId.toString());
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('taskId', taskId.toString());
+  };
+
+  const handleDragEnd = () => {
+    dragState.current = null;
+    setDraggedTaskId(null);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent, sourceColumnId: number, taskId: number) => {
+    if (e.pointerType !== 'touch') return;
+    const drag = { sourceColumnId, taskId };
+    pointerStart.current = { drag, x: e.clientX, y: e.clientY };
+    dragState.current = drag;
+    pointerDragging.current = false;
+    pointerTarget.current = null;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return;
+    const start = pointerStart.current;
+    if (!start) return;
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
+    pointerDragging.current = true;
+    suppressClick.current = true;
+    setDraggedTaskId(start.drag.taskId);
+    pointerTarget.current = getDropTargetAtPoint(e.clientX, e.clientY);
+  };
+
+  const finishPointerDrag = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return;
+    const start = pointerStart.current;
+    const wasDragging = pointerDragging.current;
+    const target = getDropTargetAtPoint(e.clientX, e.clientY) || pointerTarget.current;
+    pointerStart.current = null;
+    pointerDragging.current = false;
+    pointerTarget.current = null;
+    dragState.current = null;
+    setDraggedTaskId(null);
+    if (!start || !activeBoard) return;
+    if (!wasDragging) {
+      const task = activeBoard.columns
+        .find((column) => column.id === start.drag.sourceColumnId)
+        ?.tasks.find((taskItem) => taskItem.id === start.drag.taskId);
+      if (task) setSelectedTask(task);
+      return;
+    }
+    e.preventDefault();
+    if (target) void moveTask(start.drag, target);
+  };
+
+  const handlePointerCancel = () => {
+    pointerStart.current = null;
+    pointerDragging.current = false;
+    pointerTarget.current = null;
+    dragState.current = null;
+    setDraggedTaskId(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, targetColumnId: number) => {
+  const handleTaskDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    const taskId = e.dataTransfer.getData('taskId');
-    if (!taskId || !activeBoard) return;
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+  };
 
-    try {
-      const sourceColumn = activeBoard.columns.find((column) =>
-        column.tasks.some((task) => task.id === Number(taskId)));
-      const targetColumn = activeBoard.columns.find((column) => column.id === targetColumnId);
-      if (!sourceColumn || !targetColumn) return;
-      const movedTask = sourceColumn.tasks.find((task) => task.id === Number(taskId));
-      if (!movedTask) return;
-      const targetPosition = movedTask.column_id === targetColumnId
-        ? Math.max(0, targetColumn.tasks.length - 1)
-        : targetColumn.tasks.length;
-      const updatedTask = await updateTask(movedTask.id, {
-        column_id: targetColumnId,
-        position: targetPosition,
-      });
-      updateTaskInBoard(updatedTask);
-    } catch (error: unknown) {
-      console.error('Failed to move task:', error);
-      alert('Failed to move task.');
-    }
+  const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
+    e.preventDefault();
+    const state = dragState.current;
+    const sourceColumnId = Number(e.dataTransfer.getData('sourceColumnId'));
+    const taskId = Number(e.dataTransfer.getData('taskId'));
+    const drag = state || (
+      Number.isInteger(sourceColumnId) && Number.isInteger(taskId)
+        ? { sourceColumnId, taskId }
+        : null
+    );
+    if (!drag) return;
+    const pointTarget = targetTaskId === null ? getDropTargetAtPoint(e.clientX, e.clientY) : null;
+    const location = targetTaskId === null
+      ? (pointTarget?.columnId === targetColumnId
+        ? pointTarget
+        : { columnId: targetColumnId, taskId: null, after: true })
+      : (() => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        return { columnId: targetColumnId, taskId: targetTaskId, after: e.clientY >= rect.top + rect.height / 2 };
+      })();
+    void moveTask(drag, location);
+    dragState.current = null;
+    setDraggedTaskId(null);
   };
 
   if (loading) {
@@ -189,13 +285,17 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, task.id)}
-                  onPointerDown={(e) => handlePointerDown(e, task.id)}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={() => {
-                    if (!pointerDragging.current) setSelectedTask(task);
-                    else void finishPointerDrag();
+                  onDragStart={(e) => handleDragStart(e, col.id, task.id)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleTaskDragOver}
+                  onDrop={(e) => {
+                    e.stopPropagation();
+                    handleDrop(e, col.id, task.id);
                   }}
+                  onPointerDown={(e) => handlePointerDown(e, col.id, task.id)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={finishPointerDrag}
+                  onPointerCancel={handlePointerCancel}
                   onClick={(e) => {
                     if (suppressClick.current) {
                       e.preventDefault();
