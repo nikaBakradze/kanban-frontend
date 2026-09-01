@@ -23,8 +23,8 @@ export interface TaskUpdateInput {
   subtasks?: SubtaskInput[];
 }
 
-const unwrap = <T,>(data: T & { board?: T; task?: T; column?: T }): T =>
-  data.board ?? data.task ?? data.column ?? data;
+const unwrap = <T,>(data: T & { board?: T; task?: T; column?: T; subtask?: T }): T =>
+  data.board ?? data.task ?? data.column ?? data.subtask ?? data;
 
 const normalizeTask = (task: Task): Task => ({
   ...task,
@@ -100,5 +100,11 @@ export const deleteTask = async (id: number): Promise<void> => {
 
 export const toggleSubtask = async (id: number, is_completed: boolean): Promise<Subtask> => {
   const response = await API.patch(`/api/tasks/subtask/${id}`, { is_completed });
-  return unwrap(response.data);
+  const subtask = unwrap<Subtask>(response.data);
+  return {
+    ...subtask,
+    id: Number(subtask.id),
+    task_id: Number(subtask.task_id),
+    is_completed: Boolean(Number(subtask.is_completed)),
+  };
 };

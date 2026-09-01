@@ -26,6 +26,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
 
   const handleDragStart = (e: React.DragEvent, taskId: number) => {
     e.dataTransfer.setData('taskId', taskId.toString());
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -43,10 +44,13 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
       const targetColumn = activeBoard.columns.find((column) => column.id === targetColumnId);
       if (!sourceColumn || !targetColumn) return;
       const movedTask = sourceColumn.tasks.find((task) => task.id === Number(taskId));
-      if (!movedTask || movedTask.column_id === targetColumnId) return;
+      if (!movedTask) return;
+      const targetPosition = movedTask.column_id === targetColumnId
+        ? Math.max(0, targetColumn.tasks.length - 1)
+        : targetColumn.tasks.length;
       const updatedTask = await updateTask(movedTask.id, {
         column_id: targetColumnId,
-        position: targetColumn.tasks.length,
+        position: targetPosition,
       });
       updateTaskInBoard(updatedTask);
     } catch (error: unknown) {
