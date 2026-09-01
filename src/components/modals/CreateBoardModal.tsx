@@ -37,8 +37,8 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
     try {
       setLoading(true);
       const filteredColumns = columns.filter((col) => col.trim() !== '');
-      await createBoard({ title, columns: filteredColumns });
-      await fetchBoards();
+      const board = await createBoard({ title: title.trim(), columns: filteredColumns });
+      await fetchBoards(board.id);
       setTitle('');
       setColumns(['Todo', 'Doing', 'Done']);
       onClose();

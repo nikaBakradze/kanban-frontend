@@ -18,7 +18,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const res = await API.post('/auth/forgot-password', { email });
+      const res = await API.post('/api/auth/forgot-password', { email });
 
       const {
         resetLink,

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import axios from 'axios';
 import { createTask } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,7 @@ interface AddTaskModalProps {
 }
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) => {
-  const { activeBoard, fetchBoards, selectBoard } = useKanban();
+  const { activeBoard, updateTaskInBoard } = useKanban();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<number | string>('');
@@ -19,7 +19,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
 
   if (!isOpen || !activeBoard) return null;
 
-  const effectiveColumnId = columnId || (activeBoard.columns?.[0]?.id ?? (activeBoard.columns?.[0] as any)?._id);
+  const effectiveColumnId = columnId || activeBoard.columns?.[0]?.id;
 
   const handleSubtaskChange = (index: number, value: string) => {
     const updated = [...subtasks];
@@ -43,21 +43,19 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
         title,
         description,
         column_id: targetColumnId,
-        subtasks: filteredSubtasks,
+        subtasks: filteredSubtasks.map((st) => ({ title: st })),
       });
-
-      const boardId = Number(activeBoard.id || (activeBoard as any)._id);
-      await selectBoard(boardId);
-      await fetchBoards();
+      updateTaskInBoard(task);
 
       setTitle('');
       setDescription('');
       setSubtasks(['', '']);
       setColumnId('');
       onClose();
-    } catch (error: any) {
-      console.error('Failed to create task:', error.response?.data || error.message);
-      alert(`ვერ მოხერხდა ამოცანის შექმნა: ${error.response?.data?.message || error.message}`);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Failed to create task:', error);
+      alert(message || 'Failed to create task.');
     } finally {
       setLoading(false);
     }
@@ -139,8 +137,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
                   onChange={(e) => setColumnId(e.target.value)}
                   className="w-full px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-white dark:bg-[#2B2C37] text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] cursor-pointer"
                 >
-                  {activeBoard.columns?.map((col: any) => (
-                    <option key={col.id || col._id} value={col.id || col._id}>
+                  {activeBoard.columns?.map((col) => (
+                    <option key={col.id} value={col.id}>
                       {col.title}
                     </option>
                   ))}

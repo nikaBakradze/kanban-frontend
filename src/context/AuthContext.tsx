@@ -22,13 +22,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<AuthResponse> => {
-    const { data } = await API.post<AuthResponse>('https://kanban-backend-b2e3.onrender.com/api/auth/login', { email, password });
+    const { data } = await API.post<AuthResponse>('/api/auth/login', { email, password });
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
@@ -36,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (full_name: string, email: string, password: string): Promise<AuthResponse> => {
-    const { data } = await API.post<AuthResponse>('https://kanban-backend-b2e3.onrender.com/api/auth/register', { full_name, email, password });
+    const { data } = await API.post<AuthResponse>('/api/auth/register', { full_name, email, password });
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
@@ -44,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const googleLogin = async (credential: string): Promise<AuthResponse> => {
-    const { data } = await API.post<AuthResponse>('https://kanban-backend-b2e3.onrender.com/api/auth/google', { credential });
+    const { data } = await API.post<AuthResponse>('/api/auth/google', { credential });
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);

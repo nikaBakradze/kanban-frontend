@@ -1,27 +1,10 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import API from '../../api/axios';
+import axios from 'axios';
+import { updateTask } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
+import type { Task, Subtask } from '../../types/kanban';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Subtask {
-  id?: number | string;
-  _id?: number | string;
-  title: string;
-  is_completed?: boolean | number;
-}
-
-interface Task {
-  id?: number | string;
-  _id?: number | string;
-  title: string;
-  description?: string;
-  column_id?: number | string;
-  columnId?: number | string;
-  position?: number;
-  subtasks?: Subtask[];
-}
 
 interface EditTaskModalProps {
   task: Task | null;
@@ -30,25 +13,19 @@ interface EditTaskModalProps {
 }
 
 export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose }) => {
-  const { activeBoard, selectBoard, fetchBoards } = useKanban();
+  const { activeBoard, updateTaskInBoard } = useKanban();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<number | string>('');
-  const [subtasks, setSubtasks] = useState<{ id?: number | string; title: string; is_completed?: boolean | number }[]>([]);
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (task) {
       setTitle(task.title || '');
       setDescription(task.description || '');
-      setColumnId(task.column_id || task.columnId || '');
-      setSubtasks(
-        (task.subtasks || []).map((st) => ({
-          id: st.id || st._id,
-          title: st.title,
-          is_completed: st.is_completed,
-        }))
-      );
+      setColumnId(task.column_id);
+      setSubtasks(task.subtasks || []);
     }
   }, [task]);
 
@@ -61,7 +38,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
   };
 
   const handleAddSubtask = () => {
-    setSubtasks([...subtasks, { title: '', is_completed: 0 }]);
+    setSubtasks([...subtasks, { id: 0, task_id: task?.id ?? 0, title: '', is_completed: false }]);
   };
 
   const handleRemoveSubtask = (index: number) => {
@@ -72,7 +49,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
     e.preventDefault();
     if (!title.trim()) return;
 
-    const taskId = task.id || task._id;
+    const taskId = task.id;
 
     try {
       setLoading(true);
@@ -80,29 +57,25 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
       const formattedSubtasks = subtasks
         .filter((st) => st.title.trim() !== '')
         .map((st) => ({
-          id: st.id,
+          ...(st.id ? { id: st.id } : {}),
           title: st.title.trim(),
-          is_completed: st.is_completed ? 1 : 0,
+          is_completed: st.is_completed,
         }));
 
-      await API.put(`/api/tasks/${taskId}`, {
+      const updatedTask = await updateTask(taskId, {
         title: title.trim(),
-        description: description.trim(),
+        description: description.trim() || null,
         column_id: Number(columnId),
-        position: typeof task.position === 'number' ? task.position : 0,
+        position: task.position,
         subtasks: formattedSubtasks,
       });
 
+      updateTaskInBoard(updatedTask);
       onClose();
-
-      await fetchBoards();
-      const boardId = Number(activeBoard.id || (activeBoard as any)._id);
-      if (boardId) {
-        await selectBoard(boardId);
-      }
-    } catch (error: any) {
-      console.error('Edit task error:', error.response?.data || error.message);
-      alert(`შეცდომა რედაქტირებისას: ${error.response?.data?.message || 'Server error'}`);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Edit task error:', error);
+      alert(message || 'Failed to update task.');
     } finally {
       setLoading(false);
     }
@@ -197,10 +170,10 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
                   onChange={(e) => setColumnId(e.target.value)}
                   className="w-full px-4 py-3 text-sm font-semibold border border-[#828FA3]/25 rounded-md bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] cursor-pointer"
                 >
-                  {activeBoard.columns?.map((col: any) => (
+                  {activeBoard.columns?.map((col) => (
                     <option
-                      key={col.id || col._id}
-                      value={col.id || col._id}
+                      key={col.id}
+                      value={col.id}
                       className="bg-white dark:bg-[#2B2C37] text-[#000112] dark:text-white"
                     >
                       {col.title}

@@ -1,58 +1,126 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Board } from '../types/kanban';
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import type { Board, Column, Task, Subtask } from '../types/kanban';
 import { getBoards, getBoardById } from '../api/kanbanApi';
+import { useAuth } from './AuthContext';
 
 interface KanbanContextType {
   boards: Board[];
   activeBoard: Board | null;
   loading: boolean;
-  fetchBoards: () => Promise<void>;
+  fetchBoards: (preferredBoardId?: number) => Promise<void>;
   selectBoard: (id: number) => Promise<void>;
+  setActiveBoard: (board: Board) => void;
+  addColumnToBoard: (column: Column) => void;
+  updateTaskInBoard: (task: Task) => void;
+  removeTaskFromBoard: (taskId: number) => void;
+  updateSubtaskInBoard: (subtask: Subtask) => void;
 }
 
 const KanbanContext = createContext<KanbanContextType | undefined>(undefined);
 
 export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading: authLoading } = useAuth();
   const [boards, setBoards] = useState<Board[]>([]);
-  const [activeBoard, setActiveBoard] = useState<Board | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [activeBoard, setActiveBoardState] = useState<Board | null>(null);
+  const [loading, setLoading] = useState(false);
+  const activeBoardRef = useRef<Board | null>(null);
 
-  // კონკრეტული დაფის წამოღება ID-ით
-  const selectBoard = useCallback(async (id: number) => {
-    try {
-      const fullBoard = await getBoardById(id);
-      setActiveBoard({ ...fullBoard });
-    } catch (error) {
-      console.error('Failed to fetch active board:', error);
-    }
+  const setActiveBoard = useCallback((board: Board) => {
+    activeBoardRef.current = board;
+    setActiveBoardState(board);
   }, []);
 
-  // ყველა დაფის წამოღება
-  const fetchBoards = useCallback(async () => {
+  const selectBoard = useCallback(async (id: number) => {
+    const fullBoard = await getBoardById(id);
+    setActiveBoard(fullBoard);
+  }, [setActiveBoard]);
+
+  const fetchBoards = useCallback(async (preferredBoardId?: number) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      setLoading(true);
       const data = await getBoards();
       setBoards(data);
-
-      if (data && data.length > 0) {
-        const firstBoardId = Number(data[0].id);
-        await selectBoard(firstBoardId);
+      const currentId = preferredBoardId ?? activeBoardRef.current?.id;
+      const boardToSelect = data.find((board) => board.id === currentId) ?? data[0];
+      if (boardToSelect) {
+        await selectBoard(boardToSelect.id);
       } else {
-        setActiveBoard(null);
+        setActiveBoardState(null);
+        activeBoardRef.current = null;
       }
-    } catch (error) {
-      console.error('Failed to fetch boards:', error);
     } finally {
       setLoading(false);
     }
-  }, [selectBoard]);
+  }, [selectBoard, user]);
 
   useEffect(() => {
-    fetchBoards();
-  }, [fetchBoards]);
+    if (authLoading) return;
+    if (user) {
+      void fetchBoards();
+    } else {
+      setBoards([]);
+      activeBoardRef.current = null;
+      setActiveBoardState(null);
+      setLoading(false);
+    }
+  }, [authLoading, fetchBoards, user]);
+
+  const updateBoardState = useCallback((transform: (board: Board) => Board) => {
+    const current = activeBoardRef.current;
+    if (!current) return;
+    const next = transform(current);
+    setActiveBoard(next);
+    setBoards((prev) => prev.map((board) => (board.id === next.id ? { ...board, title: next.title } : board)));
+  }, [setActiveBoard]);
+
+  const addColumnToBoard = useCallback((column: Column) => {
+    updateBoardState((board) => ({ ...board, columns: [...board.columns, column] }));
+  }, [updateBoardState]);
+
+  const updateTaskInBoard = useCallback((task: Task) => {
+    updateBoardState((board) => {
+      const columns = board.columns.map((column) => ({
+        ...column,
+        tasks: column.tasks.filter((item) => item.id !== task.id),
+      }));
+      const nextColumns = columns.map((column) => column.id === task.column_id
+        ? { ...column, tasks: [...column.tasks, task].sort((a, b) => a.position - b.position) }
+        : column);
+      return { ...board, columns: nextColumns };
+    });
+  }, [updateBoardState]);
+
+  const removeTaskFromBoard = useCallback((taskId: number) => {
+    updateBoardState((board) => ({
+      ...board,
+      columns: board.columns.map((column) => ({
+        ...column,
+        tasks: column.tasks.filter((task) => task.id !== taskId),
+      })),
+    }));
+  }, [updateBoardState]);
+
+  const updateSubtaskInBoard = useCallback((subtask: Subtask) => {
+    updateBoardState((board) => ({
+      ...board,
+      columns: board.columns.map((column) => ({
+        ...column,
+        tasks: column.tasks.map((task) => ({
+          ...task,
+          subtasks: task.subtasks.map((item) => item.id === subtask.id ? subtask : item),
+        })),
+      })),
+    }));
+  }, [updateBoardState]);
 
   return (
-    <KanbanContext.Provider value={{ boards, activeBoard, loading, fetchBoards, selectBoard }}>
+    <KanbanContext.Provider value={{
+      boards, activeBoard, loading, fetchBoards, selectBoard, setActiveBoard,
+      addColumnToBoard, updateTaskInBoard, removeTaskFromBoard, updateSubtaskInBoard,
+    }}>
       {children}
     </KanbanContext.Provider>
   );

@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useKanban } from '../context/KanbanContext';
-import API from '../api/axios';
+import { deleteBoard } from '../api/kanbanApi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeaderProps {
@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAddTaskModal, onOpenEditBo
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const boardId = activeBoard ? (activeBoard.id || (activeBoard as any)._id) : null;
+  const boardId = activeBoard?.id ?? null;
   const hasColumns = activeBoard?.columns && activeBoard.columns.length > 0;
 
   const handleDeleteBoard = async () => {
@@ -23,13 +23,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAddTaskModal, onOpenEditBo
 
     try {
       setIsDeleting(true);
-      await API.delete(`/boards/${boardId}`);
+      await deleteBoard(boardId);
       setIsDeleteModalOpen(false);
       setShowMenu(false);
       await fetchBoards();
-    } catch (error: any) {
-      console.error('Failed to delete board:', error.response?.data || error.message);
-      alert(`შეცდომა წაშლისას: ${error.response?.data?.message || error.message}`);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Failed to delete board:', error);
+      alert(message || 'Failed to delete board.');
     } finally {
       setIsDeleting(false);
     }

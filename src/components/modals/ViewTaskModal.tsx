@@ -1,28 +1,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import API from '../../api/axios';
+import axios from 'axios';
+import { deleteTask, toggleSubtask, updateTask } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
+import type { Task, Subtask } from '../../types/kanban';
 import { EditTaskModal } from './EditTaskModal';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Subtask {
-  id?: number | string;
-  _id?: number | string;
-  title: string;
-  is_completed: boolean | number;
-}
-
-interface Task {
-  id?: number | string;
-  _id?: number | string;
-  title: string;
-  description?: string;
-  column_id?: number | string;
-  columnId?: number | string;
-  position?: number;
-  subtasks?: Subtask[];
-}
 
 interface ViewTaskModalProps {
   task: Task | null;
@@ -30,7 +13,7 @@ interface ViewTaskModalProps {
 }
 
 export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) => {
-  const { activeBoard } = useKanban();
+  const { activeBoard, updateTaskInBoard, updateSubtaskInBoard, removeTaskFromBoard } = useKanban();
   const [showOptions, setShowOptions] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -40,28 +23,35 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
 
   useEffect(() => {
     if (task) {
-      const normalizedSubtasks = (task.subtasks || []).map((st) => ({
-        id: st.id || st._id,
-        title: st.title,
-        is_completed: Number(st.is_completed) === 1 || st.is_completed === true,
-      }));
-      setSubtasks(normalizedSubtasks);
-      setSelectedColumnId(task.column_id || task.columnId || '');
+      setSubtasks(task.subtasks || []);
+      setSelectedColumnId(task.column_id);
     }
   }, [task]);
 
   if (!task || !activeBoard) return null;
 
-  const taskId = task.id || task._id;
+  const taskId = task.id;
   const completedSubtasksCount = subtasks.filter((st) => Boolean(st.is_completed)).length;
   const totalSubtasksCount = subtasks.length;
 
-  const handleToggleSubtask = (index: number) => {
-    setSubtasks((prev) =>
-      prev.map((st, i) =>
-        i === index ? { ...st, is_completed: !st.is_completed } : st
-      )
-    );
+  const handleToggleSubtask = async (index: number) => {
+    const current = subtasks[index];
+    if (!current?.id) return;
+    const nextValue = !current.is_completed;
+    setSubtasks((prev) => prev.map((st, i) => i === index ? { ...st, is_completed: nextValue } : st));
+    try {
+      const updatedSubtask = await toggleSubtask(current.id, nextValue);
+      const normalizedSubtask: Subtask = {
+        ...current,
+        ...updatedSubtask,
+        is_completed: Boolean(updatedSubtask.is_completed),
+      };
+      setSubtasks((prev) => prev.map((st, i) => i === index ? normalizedSubtask : st));
+      updateSubtaskInBoard(normalizedSubtask);
+    } catch (error: unknown) {
+      setSubtasks((prev) => prev.map((st, i) => i === index ? { ...st, is_completed: current.is_completed } : st));
+      alert(axios.isAxiosError(error) ? error.response?.data?.message || 'Failed to update subtask.' : 'Failed to update subtask.');
+    }
   };
 
   const handleSaveChanges = async () => {
@@ -70,38 +60,24 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
       const parsedColId = Number(selectedColumnId);
 
       const formattedSubtasks = subtasks.map((st) => ({
-        id: st.id || st._id,
+        id: st.id,
         title: st.title,
-        is_completed: st.is_completed ? 1 : 0,
+        is_completed: st.is_completed,
       }));
 
-      if (activeBoard && activeBoard.columns) {
-        const updatedTask = {
-          ...task,
-          column_id: parsedColId,
-          subtasks: formattedSubtasks,
-        };
-
-        activeBoard.columns.forEach((col: any) => {
-          col.tasks = (col.tasks || []).filter((t: any) => (t.id || t._id) !== taskId);
-          if (Number(col.id || col._id) === parsedColId) {
-            col.tasks.push(updatedTask);
-          }
-        });
-      }
-
-      onClose();
-
-      await API.put(`/tasks/${taskId}`, {
+      const updatedTask = await updateTask(taskId, {
         title: task.title,
-        description: task.description || '',
+        description: task.description || null,
         column_id: parsedColId,
-        position: typeof task.position === 'number' ? task.position : 0,
+        position: task.position,
         subtasks: formattedSubtasks,
       });
-    } catch (error: any) {
-      console.error('Save error details:', error.response?.data || error.message);
-      alert(`შეცდომა შენახვისას: ${error.response?.data?.message || error.message}`);
+      updateTaskInBoard(updatedTask);
+      onClose();
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Save error details:', error);
+      alert(message || 'Failed to save task.');
     } finally {
       setIsSaving(false);
     }
@@ -109,17 +85,14 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
 
   const handleConfirmDelete = async () => {
     try {
-      if (activeBoard && activeBoard.columns) {
-        activeBoard.columns.forEach((col: any) => {
-          col.tasks = (col.tasks || []).filter((t: any) => (t.id || t._id) !== taskId);
-        });
-      }
+      await deleteTask(taskId);
+      removeTaskFromBoard(taskId);
       setIsDeleteModalOpen(false);
       onClose();
-
-      await API.delete(`/tasks/${taskId}`);
-    } catch (error: any) {
-      console.error('Delete error:', error.response?.data || error.message);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Delete error:', error);
+      alert(message || 'Failed to delete task.');
     }
   };
 
@@ -259,10 +232,10 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
                 onChange={(e) => setSelectedColumnId(e.target.value)}
                 className="w-full px-4 py-3 text-sm font-semibold border border-[#828FA3]/25 rounded-md bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] cursor-pointer"
               >
-                {activeBoard.columns?.map((col: any) => (
+                {activeBoard.columns?.map((col) => (
                   <option
-                    key={col.id || col._id}
-                    value={col.id || col._id}
+                    key={col.id}
+                    value={col.id}
                     className="bg-white dark:bg-[#2B2C37] text-[#000112] dark:text-white"
                   >
                     {col.title}

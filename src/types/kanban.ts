@@ -6,7 +6,6 @@ export interface Subtask {
 }
 
 export interface Task {
-  _id: number;
   id: number;
   title: string;
   description: string | null;
@@ -16,7 +15,6 @@ export interface Task {
 }
 
 export interface Column {
-  _id: number;
   id: number;
   title: string;
   board_id: number;

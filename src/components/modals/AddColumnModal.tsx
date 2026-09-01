@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import API from '../../api/axios';
+import axios from 'axios';
+import { addColumn } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,7 +10,7 @@ interface AddColumnModalProps {
 }
 
 export const AddColumnModal: React.FC<AddColumnModalProps> = ({ isOpen, onClose }) => {
-  const { activeBoard, selectBoard } = useKanban();
+  const { activeBoard, addColumnToBoard } = useKanban();
   const [columnTitle, setColumnTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,19 +22,15 @@ export const AddColumnModal: React.FC<AddColumnModalProps> = ({ isOpen, onClose 
 
     try {
       setIsSubmitting(true);
-      const boardId = Number(activeBoard.id || (activeBoard as any)._id);
-
-      await API.post('/boards/column', {
-        board_id: boardId,
-        title: columnTitle.trim(),
-      });
+      const column = await addColumn(activeBoard.id, columnTitle.trim());
+      addColumnToBoard(column);
 
       setColumnTitle('');
       onClose();
-      await selectBoard(boardId);
-    } catch (error: any) {
-      console.error('Failed to add column:', error.response?.data || error.message);
-      alert(`შეცდომა სვეტის დამატებისას: ${error.response?.data?.message || error.message}`);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Failed to add column:', error);
+      alert(message || 'Failed to add column.');
     } finally {
       setIsSubmitting(false);
     }

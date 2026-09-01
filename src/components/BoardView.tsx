@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useKanban } from '../context/KanbanContext';
 import { ViewTaskModal } from './modals/ViewTaskModal';
-import API from '../api/axios';
+import { updateTask } from '../api/kanbanApi';
+import type { Task } from '../types/kanban';
 import { motion } from 'framer-motion';
 
 interface BoardViewProps {
@@ -11,8 +11,8 @@ interface BoardViewProps {
 }
 
 export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOpenCreateBoardModal }) => {
-  const { activeBoard, selectBoard, loading } = useKanban();
-  const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const { activeBoard, updateTaskInBoard, loading } = useKanban();
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const getColumnDotColor = (title: string, index: number) => {
     const cleanTitle = title.trim().toUpperCase();
@@ -38,10 +38,20 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     if (!taskId || !activeBoard) return;
 
     try {
-      await API.put(`/api/tasks/${taskId}`, { column_id: targetColumnId, position: 0 });
-      await selectBoard(Number(activeBoard.id || (activeBoard as any)._id));
-    } catch (error) {
+      const sourceColumn = activeBoard.columns.find((column) =>
+        column.tasks.some((task) => task.id === Number(taskId)));
+      const targetColumn = activeBoard.columns.find((column) => column.id === targetColumnId);
+      if (!sourceColumn || !targetColumn) return;
+      const movedTask = sourceColumn.tasks.find((task) => task.id === Number(taskId));
+      if (!movedTask || movedTask.column_id === targetColumnId) return;
+      const updatedTask = await updateTask(movedTask.id, {
+        column_id: targetColumnId,
+        position: targetColumn.tasks.length,
+      });
+      updateTaskInBoard(updatedTask);
+    } catch (error: unknown) {
       console.error('Failed to move task:', error);
+      alert('Failed to move task.');
     }
   };
 
@@ -93,9 +103,9 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     <main className="flex-1 overflow-x-auto p-6 flex gap-6 bg-[#F4F7FD] dark:bg-[#20212C] h-full items-start">
       {activeBoard.columns.map((col, index) => (
         <div
-          key={col.id || col._id}
+          key={col.id}
           onDragOver={handleDragOver}
-          onDrop={(e) => handleDrop(e, Number(col.id || col._id))}
+          onDrop={(e) => handleDrop(e, col.id)}
           className="w-70 shrink-0 flex flex-col gap-6"
         >
           <div className="flex items-center gap-3">
@@ -108,18 +118,18 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           <div className="flex flex-col gap-5">
             {col.tasks?.map((task) => {
               const completedCount = task.subtasks?.filter(
-                (st: any) => Number(st.is_completed) === 1 || st.is_completed === true
+                (st) => st.is_completed
               ).length || 0;
               const totalSubtasks = task.subtasks?.length || 0;
 
               return (
                 <motion.div
-                  key={task.id || task._id}
+                  key={task.id}
                   layout
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, Number(task.id || task._id))}
+                  onDragStart={(e) => handleDragStart(e, task.id)}
                   onClick={() => setSelectedTask(task)}
                   className="bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg shadow-sm hover:text-[#635FC7] cursor-pointer transition-colors group"
                 >

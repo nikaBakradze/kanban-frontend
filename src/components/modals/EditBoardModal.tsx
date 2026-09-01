@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import API from '../../api/axios';
+import axios from 'axios';
+import { updateBoard } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,17 +11,17 @@ interface EditBoardModalProps {
 }
 
 export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose }) => {
-  const { activeBoard, selectBoard } = useKanban();
+  const { activeBoard, setActiveBoard } = useKanban();
   const [boardTitle, setBoardTitle] = useState('');
-  const [columns, setColumns] = useState<{ id?: number | string; title: string }[]>([]);
+  const [columns, setColumns] = useState<{ id: number; title: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (activeBoard) {
       setBoardTitle(activeBoard.title || '');
       setColumns(
-        activeBoard.columns?.map((col: any) => ({
-          id: col.id || col._id,
+        activeBoard.columns?.map((col) => ({
+          id: col.id,
           title: col.title,
         })) || []
       );
@@ -41,6 +41,15 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
   };
 
   const handleRemoveColumn = (index: number) => {
+    const column = columns[index];
+    const existingColumn = column?.id
+      ? activeBoard.columns.find((item) => item.id === column.id)
+      : undefined;
+    if (existingColumn?.tasks.length && !window.confirm(
+      `Delete "${existingColumn.title}" and its ${existingColumn.tasks.length} task(s)?`,
+    )) {
+      return;
+    }
     setColumns(columns.filter((_, i) => i !== index));
   };
 
@@ -50,20 +59,21 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
 
     try {
       setIsSubmitting(true);
-      const boardId = Number(activeBoard.id || (activeBoard as any)._id);
+      const boardId = activeBoard.id;
 
       const filteredColumns = columns.filter((col) => col.title.trim() !== '');
 
-      await API.put(`/api/boards/${boardId}`, {
+      const updatedBoard = await updateBoard(boardId, {
         title: boardTitle.trim(),
-        columns: filteredColumns,
+        columns: filteredColumns.map((column) => ({ id: column.id, title: column.title.trim() })),
       });
 
-      await selectBoard(boardId);
+      setActiveBoard(updatedBoard);
       onClose();
-    } catch (error: any) {
-      console.error('Failed to update board:', error.response?.data || error.message);
-      alert(`შეცდომა დაფის განახლებისას: ${error.response?.data?.message || error.message}`);
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      console.error('Failed to update board:', error);
+      alert(message || 'Failed to update board.');
     } finally {
       setIsSubmitting(false);
     }
