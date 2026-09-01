@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useKanban } from '../context/KanbanContext';
 import { ViewTaskModal } from './modals/ViewTaskModal';
 import { updateTask } from '../api/kanbanApi';
@@ -13,6 +13,10 @@ interface BoardViewProps {
 export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOpenCreateBoardModal }) => {
   const { activeBoard, updateTaskInBoard, loading } = useKanban();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
+  const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
+  const pointerDragging = useRef(false);
+  const suppressClick = useRef(false);
 
   const getColumnDotColor = (title: string, index: number) => {
     const cleanTitle = title.trim().toUpperCase();
@@ -27,6 +31,49 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const handleDragStart = (e: React.DragEvent, taskId: number) => {
     e.dataTransfer.setData('taskId', taskId.toString());
     e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handlePointerDown = (e: React.PointerEvent, taskId: number) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointerStart.current = { id: taskId, x: e.clientX, y: e.clientY };
+    pointerDragging.current = false;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const start = pointerStart.current;
+    if (!start) return;
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
+    pointerDragging.current = true;
+    suppressClick.current = true;
+    setDraggedTaskId(start.id);
+  };
+
+  const finishPointerDrag = async (e: React.PointerEvent, targetColumnId?: number) => {
+    const start = pointerStart.current;
+    const wasDragging = pointerDragging.current;
+    pointerStart.current = null;
+    pointerDragging.current = false;
+    setDraggedTaskId(null);
+    if (!wasDragging || !targetColumnId || !activeBoard) return;
+
+    const sourceColumn = activeBoard.columns.find((column) => column.tasks.some((task) => task.id === start.id));
+    const targetColumn = activeBoard.columns.find((column) => column.id === targetColumnId);
+    const movedTask = sourceColumn?.tasks.find((task) => task.id === start.id);
+    if (!movedTask || !targetColumn) return;
+
+    try {
+      const targetPosition = movedTask.column_id === targetColumnId
+        ? Math.max(0, targetColumn.tasks.length - 1)
+        : targetColumn.tasks.length;
+      const updatedTask = await updateTask(movedTask.id, {
+        column_id: targetColumnId,
+        position: targetPosition,
+      });
+      updateTaskInBoard(updatedTask);
+    } catch (error) {
+      console.error('Failed to move task:', error);
+      alert('Failed to move task.');
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -110,6 +157,11 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           key={col.id}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, col.id)}
+          onPointerUp={(e) => void finishPointerDrag(e, col.id)}
+          onPointerEnter={() => {
+            if (pointerDragging.current) setDraggedTaskId(pointerStart.current?.id ?? null);
+          }}
+          data-drop-target={draggedTaskId !== null ? 'true' : undefined}
           className="w-70 shrink-0 flex flex-col gap-6"
         >
           <div className="flex items-center gap-3">
@@ -134,7 +186,18 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                   whileTap={{ scale: 0.98 }}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task.id)}
-                  onClick={() => setSelectedTask(task)}
+                  onPointerDown={(e) => handlePointerDown(e, task.id)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={() => {
+                    if (!pointerDragging.current) setSelectedTask(task);
+                  }}
+                  onClick={(e) => {
+                    if (suppressClick.current) {
+                      e.preventDefault();
+                      suppressClick.current = false;
+                    }
+                  }}
+                  style={{ touchAction: 'none', opacity: draggedTaskId === task.id ? 0.5 : 1 }}
                   className="bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg shadow-sm hover:text-[#635FC7] cursor-pointer transition-colors group"
                 >
                   <h4 className="font-bold text-[#000112] dark:text-white text-[15px] group-hover:text-[#635FC7] mb-2">
