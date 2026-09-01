@@ -54,7 +54,7 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
 
       const filteredColumns = columns.filter((col) => col.title.trim() !== '');
 
-      await API.put(`/boards/${boardId}`, {
+      await API.put(`/api/boards/${boardId}`, {
         title: boardTitle.trim(),
         columns: filteredColumns,
       });

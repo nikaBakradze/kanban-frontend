@@ -38,7 +38,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     if (!taskId || !activeBoard) return;
 
     try {
-      await API.put(`/tasks/${taskId}`, { column_id: targetColumnId, position: 0 });
+      await API.put(`/api/tasks/${taskId}`, { column_id: targetColumnId, position: 0 });
       await selectBoard(Number(activeBoard.id || (activeBoard as any)._id));
     } catch (error) {
       console.error('Failed to move task:', error);
@@ -119,7 +119,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   draggable
-                  onDrop={(e: any) => handleDrop(e, Number(col.id || col._id))}
+                  onDragStart={(e) => handleDragStart(e, Number(task.id || task._id))}
                   onClick={() => setSelectedTask(task)}
                   className="bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg shadow-sm hover:text-[#635FC7] cursor-pointer transition-colors group"
                 >

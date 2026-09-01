@@ -71,6 +71,7 @@ export default function Auth() {
     setError('');
 
     try {
+      // განახლებული ენდფოინთი /api/auth/login
       await login(loginEmail, loginPassword);
       navigate('/dashboard');
     } catch (err: unknown) {
@@ -92,6 +93,7 @@ export default function Auth() {
     setError('');
 
     try {
+      // განახლებული ენდფოინთი /api/auth/register
       await register(regFullName, regEmail, regPassword);
       navigate('/dashboard');
     } catch (err: unknown) {
@@ -363,7 +365,6 @@ export default function Auth() {
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           className="relative w-full overflow-hidden rounded-xl border border-gray-700/60 bg-[#1c1f26]/80 backdrop-blur-sm transition-all duration-200 hover:border-gray-500 hover:bg-[#232730]"
         >
-          {/* ვიზუალური ნაწილი (მორგებული UI) */}
           <div className="flex w-full items-center justify-center gap-3 py-3 px-4">
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -388,7 +389,6 @@ export default function Auth() {
             </span>
           </div>
 
-          {/* რეალური Google Button (გამჭვირვალე overlay) */}
           <div className="absolute inset-0 opacity-0 cursor-pointer">
             <GoogleLogin
               onSuccess={async (credentialResponse: CredentialResponse) => {

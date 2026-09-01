@@ -85,7 +85,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
           is_completed: st.is_completed ? 1 : 0,
         }));
 
-      await API.put(`/tasks/${taskId}`, {
+      await API.put(`/api/tasks/${taskId}`, {
         title: title.trim(),
         description: description.trim(),
         column_id: Number(columnId),
