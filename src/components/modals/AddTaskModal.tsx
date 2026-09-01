@@ -39,7 +39,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
       setLoading(true);
       const filteredSubtasks = subtasks.filter((st) => st.trim() !== '');
       
-      await createTask({
+      const task = await createTask({
         title,
         description,
         column_id: targetColumnId,
