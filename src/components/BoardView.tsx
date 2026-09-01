@@ -17,6 +17,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
   const pointerDragging = useRef(false);
   const suppressClick = useRef(false);
+  const pointerTargetColumn = useRef<number | null>(null);
 
   const getColumnDotColor = (title: string, index: number) => {
     const cleanTitle = title.trim().toUpperCase();
@@ -37,6 +38,8 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     pointerStart.current = { id: taskId, x: e.clientX, y: e.clientY };
     pointerDragging.current = false;
+    pointerTargetColumn.current = null;
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -46,13 +49,17 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     pointerDragging.current = true;
     suppressClick.current = true;
     setDraggedTaskId(start.id);
+    const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-column-id]');
+    pointerTargetColumn.current = target ? Number(target.getAttribute('data-column-id')) : null;
   };
 
-  const finishPointerDrag = async (e: React.PointerEvent, targetColumnId?: number) => {
+  const finishPointerDrag = async () => {
     const start = pointerStart.current;
     const wasDragging = pointerDragging.current;
+    const targetColumnId = pointerTargetColumn.current;
     pointerStart.current = null;
     pointerDragging.current = false;
+    pointerTargetColumn.current = null;
     setDraggedTaskId(null);
     if (!wasDragging || !targetColumnId || !activeBoard) return;
 
@@ -157,10 +164,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           key={col.id}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, col.id)}
-          onPointerUp={(e) => void finishPointerDrag(e, col.id)}
-          onPointerEnter={() => {
-            if (pointerDragging.current) setDraggedTaskId(pointerStart.current?.id ?? null);
-          }}
+          data-column-id={col.id}
           data-drop-target={draggedTaskId !== null ? 'true' : undefined}
           className="w-70 shrink-0 flex flex-col gap-6"
         >
@@ -190,6 +194,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                   onPointerMove={handlePointerMove}
                   onPointerUp={() => {
                     if (!pointerDragging.current) setSelectedTask(task);
+                    else void finishPointerDrag();
                   }}
                   onClick={(e) => {
                     if (suppressClick.current) {
