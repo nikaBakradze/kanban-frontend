@@ -8,6 +8,7 @@ import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { AddColumnModal } from '../components/modals/AddColumnModal';
 import { EditBoardModal } from '../components/modals/EditBoardModal';
 import showSidebarIcon from '../assets/show sidebar.svg';
+import kanbanLogo from '../assets/kanban-logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
@@ -59,6 +60,7 @@ export default function Dashboard() {
                 isDarkMode={isDarkMode}
                 toggleTheme={toggleTheme}
                 onLogout={logout}
+                showBrand={isSidebarVisible}
               />
             </motion.div>
           </>
@@ -68,16 +70,30 @@ export default function Dashboard() {
       {/* Show Sidebar Floating Button */}
       <AnimatePresence>
         {!isSidebarVisible && (
-          <motion.button
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -50, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setIsSidebarVisible(true)}
-            className="fixed bottom-8 left-0 bg-[#635FC7] hover:bg-[#A8A4FF] text-white px-4 md:px-5 py-3.5 md:py-4 rounded-r-full transition-colors z-50 shadow-lg flex items-center justify-center cursor-pointer"
-          >
-            <img src={showSidebarIcon} alt="Show Sidebar" className="w-4 h-4" />
-          </motion.button>
+          <>
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed top-0 left-0 z-50 h-20 md:h-24 flex items-center gap-4 pl-6 md:pl-8 pointer-events-none"
+            >
+              <img src={kanbanLogo} alt="Kanban" className="w-6 h-6" />
+              <h1 className="text-2xl md:text-3xl font-bold text-[#000112] dark:text-white tracking-wide">
+                kanban
+              </h1>
+            </motion.div>
+            <motion.button
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -50, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsSidebarVisible(true)}
+              className="fixed bottom-8 left-0 bg-[#635FC7] hover:bg-[#A8A4FF] text-white px-4 md:px-5 py-3.5 md:py-4 rounded-r-full transition-colors z-50 shadow-lg flex items-center justify-center cursor-pointer"
+            >
+              <img src={showSidebarIcon} alt="Show Sidebar" className="w-4 h-4" />
+            </motion.button>
+          </>
         )}
       </AnimatePresence>
 

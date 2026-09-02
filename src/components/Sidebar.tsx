@@ -15,6 +15,7 @@ interface SidebarProps {
   isDarkMode: boolean;
   toggleTheme: () => void;
   onLogout: () => void;
+  showBrand?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -23,18 +24,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isDarkMode,
   toggleTheme,
   onLogout,
+  showBrand = true,
 }) => {
   const { boards, activeBoard, selectBoard } = useKanban();
 
   return (
     <aside className="w-[280px] md:w-[300px] bg-white dark:bg-[#2B2C37] border-r border-[#E4E8F1] dark:border-[#3E3F4E] flex flex-col justify-between h-full shrink-0 pb-6 pr-4 md:pr-6 transition-colors duration-200">
       <div className="overflow-y-auto flex-1">
-        <div className="h-20 md:h-24 flex items-center gap-4 pl-6 md:pl-8">
-          <img src={kanbanLogo} alt="Kanban" className="w-6 h-6" />
-          <h1 className="text-2xl md:text-3xl font-bold text-[#000112] dark:text-white tracking-wide">
-            kanban
-          </h1>
-        </div>
+        {showBrand && (
+          <div className="h-20 md:h-24 flex items-center gap-4 pl-6 md:pl-8">
+            <img src={kanbanLogo} alt="Kanban" className="w-6 h-6" />
+            <h1 className="text-2xl md:text-3xl font-bold text-[#000112] dark:text-white tracking-wide">
+              kanban
+            </h1>
+          </div>
+        )}
 
         <p className="text-xs font-bold text-[#828FA3] uppercase tracking-[2.4px] mb-4 md:mb-5 pl-6 md:pl-8">
           ALL BOARDS ({boards.length})

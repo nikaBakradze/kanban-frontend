@@ -306,7 +306,9 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                     if (suppressClick.current) {
                       e.preventDefault();
                       suppressClick.current = false;
+                      return;
                     }
+                    setSelectedTask(task);
                   }}
                   style={{ touchAction: 'none', opacity: draggedTaskId === task.id ? 0.5 : 1 }}
                   className="bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg shadow-sm hover:text-[#635FC7] cursor-pointer transition-colors group"
