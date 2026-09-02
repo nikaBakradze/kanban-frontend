@@ -8,7 +8,6 @@ import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { AddColumnModal } from '../components/modals/AddColumnModal';
 import { EditBoardModal } from '../components/modals/EditBoardModal';
 import showSidebarIcon from '../assets/show sidebar.svg';
-import kanbanLogo from '../assets/kanban-logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
@@ -71,18 +70,6 @@ export default function Dashboard() {
       <AnimatePresence>
         {!isSidebarVisible && (
           <>
-            <motion.div
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="fixed top-0 left-0 z-50 h-20 md:h-24 flex items-center gap-4 pl-6 md:pl-8 pointer-events-none"
-            >
-              <img src={kanbanLogo} alt="Kanban" className="w-6 h-6" />
-              <h1 className="text-2xl md:text-3xl font-bold text-[#000112] dark:text-white tracking-wide">
-                kanban
-              </h1>
-            </motion.div>
             <motion.button
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
