@@ -28,7 +28,11 @@ export default function Dashboard() {
   }, [isDarkMode]);
 
   const toggleTheme = () => {
+    document.documentElement.classList.add('theme-transition');
     setIsDarkMode((prev) => !prev);
+    window.setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 260);
   };
 
   return (

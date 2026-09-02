@@ -2,6 +2,20 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html.theme-transition,
+html.theme-transition * {
+    transition-property: background-color, color, border-color, box-shadow, fill, stroke !important;
+    transition-duration: 240ms !important;
+    transition-timing-function: ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.theme-transition,
+    html.theme-transition * {
+        transition-duration: 0ms !important;
+    }
+}
+
 /* Autofill სტილები */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
