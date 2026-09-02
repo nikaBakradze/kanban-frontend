@@ -26,6 +26,15 @@ export default function ForgotPassword() {
         to_name,
       } = res.data;
 
+      const emailjsConfig = [
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+      ];
+      if (emailjsConfig.some((value) => !value)) {
+        throw new Error('Email service is not configured in the frontend environment.');
+      }
+
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
@@ -52,7 +61,8 @@ export default function ForgotPassword() {
           'Something went wrong.'
         );
       } else {
-        setError('Failed to send email.');
+        const emailError = err instanceof Error ? err.message : '';
+        setError(emailError || 'Failed to send email.');
       }
     } finally {
       setLoading(false);
