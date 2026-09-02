@@ -393,7 +393,7 @@ export default function Auth() {
             </span>
           </div>
 
-          <div className="absolute inset-0 opacity-0 cursor-pointer">
+          <div className="absolute inset-0 z-10 cursor-pointer opacity-[0.01]">
             <GoogleLogin
               onSuccess={async (credentialResponse: CredentialResponse) => {
                 if (credentialResponse.credential) {
