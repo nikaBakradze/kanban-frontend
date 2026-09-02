@@ -42,15 +42,15 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="h-24 bg-white dark:bg-[#2B2C37] px-6 flex items-center justify-between border-b border-[#E4EBFA] dark:border-[#3E3F4E]">
+      <header className="h-24 bg-white dark:bg-[#2B2C37] pl-0 pr-6 flex items-center justify-between border-b border-[#E4EBFA] dark:border-[#3E3F4E]">
         <div className="flex min-w-0 flex-1 items-center">
-          <div className="hidden h-24 w-[300px] shrink-0 items-center gap-4 border-r border-[#E4EBFA] pl-2 dark:border-[#3E3F4E] md:flex">
+          <div className="hidden h-24 w-[300px] shrink-0 items-center gap-4 border-r border-[#E4EBFA] pl-8 dark:border-[#3E3F4E] md:flex">
               <img src={kanbanLogo} alt="Kanban" className="h-6 w-6" />
-              <span className="text-2xl font-bold tracking-wide text-[#000112] dark:text-white">
+              <span className="text-2xl font-bold tracking-wide text-[#000112] dark:text-white md:text-3xl">
                 kanban
               </span>
           </div>
-          <h1 className="min-w-0 truncate text-xl font-bold text-[#000112] dark:text-white md:text-2xl">
+          <h1 className="ml-6 min-w-0 truncate text-xl font-bold text-[#000112] dark:text-white md:text-2xl">
             {activeBoard ? activeBoard.title : 'No Active Board'}
           </h1>
         </div>
