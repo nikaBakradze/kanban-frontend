@@ -284,6 +284,12 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                   layout
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  whileDrag={{ scale: 1.02, opacity: 0.75 }}
+                  transition={{
+                    layout: { type: 'tween', duration: 0.18, ease: 'easeOut' },
+                    scale: { type: 'spring', stiffness: 420, damping: 26 },
+                    opacity: { duration: 0.15, ease: 'easeOut' },
+                  }}
                   draggable
                   onDragStart={(e) => handleDragStart(e, col.id, task.id)}
                   onDragEnd={handleDragEnd}

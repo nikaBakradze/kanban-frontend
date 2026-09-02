@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 import showIcon from '../assets/show password.svg';
 import hideIcon from '../assets/hide password.svg';
@@ -41,6 +41,7 @@ const formVariants = {
 };
 
 export default function Auth() {
+  const shouldReduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -154,11 +155,14 @@ export default function Auth() {
         <AnimatePresence mode="wait">
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -8, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -8, height: 0 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="mb-4 overflow-hidden rounded-xl border border-red-500/50 bg-red-500/10 p-3 text-center text-sm text-red-400"
+              initial={{ opacity: 0, y: -8, scaleY: 0.9 }}
+              animate={{ opacity: 1, y: 0, scaleY: 1 }}
+              exit={{ opacity: 0, y: -8, scaleY: 0.9 }}
+              transition={shouldReduceMotion
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 500, damping: 30 }}
+              style={{ transformOrigin: 'top' }}
+              className="mb-4 rounded-xl border border-red-500/50 bg-red-500/10 p-3 text-center text-sm text-red-400"
             >
               {error}
             </motion.div>

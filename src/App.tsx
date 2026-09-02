@@ -8,6 +8,7 @@ import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
 import bgSvg from './assets/bg.svg';
 import kanbanLogo from './assets/kanban-logo.svg';
+import { MotionConfig, useReducedMotion } from 'framer-motion';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
@@ -19,6 +20,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 export default function App() {
+  const shouldReduceMotion = useReducedMotion();
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [revealText, setRevealText] = useState(false);
@@ -51,41 +53,43 @@ export default function App() {
 
   return (
     <Router>
-      <AuthProvider>
-        <KanbanProvider>
-          {showSplash && (
-            <div
-              className={`fixed inset-0 z-9999 flex items-center justify-center bg-[#000000] transition-opacity duration-700 ease-in-out ${
-                fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
-              }`}
-            >
-              <div className="flex items-center space-x-5 relative">
-                <img
-                  src={kanbanLogo}
-                  alt="Kanban Logo"
-                  className={`w-12 h-12 md:w-16 md:h-16 transition-all duration-700 ease-out transform ${
-                    showLogo 
-                      ? 'opacity-100 scale-100 translate-x-0' 
-                      : 'opacity-0 scale-50 -translate-x-10'
-                  }`}
-                  style={{
-                    transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-                  }}
-                />
+      <MotionConfig reducedMotion="user">
+        <AuthProvider>
+          <KanbanProvider>
+            {showSplash && (
+              <div
+                className={`fixed inset-0 z-9999 flex items-center justify-center bg-[#000000] transition-opacity ${
+                  shouldReduceMotion ? 'duration-0' : 'duration-700'
+                } ease-in-out ${
+                  fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                }`}
+              >
+                <div className="flex items-center space-x-5 relative">
+                  <img
+                    src={kanbanLogo}
+                    alt="Kanban Logo"
+                    className={`w-12 h-12 md:w-16 md:h-16 transition-all duration-700 ease-out transform ${
+                      showLogo
+                        ? 'opacity-100 scale-100 translate-x-0'
+                        : 'opacity-0 scale-50 -translate-x-10'
+                    }`}
+                    style={{
+                      transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}
+                  />
 
-                <h1
-                  className="text-4xl md:text-6xl font-bold tracking-tight text-white transition-all duration-1000 ease-out"
-                  style={{
-                    clipPath: revealText 
-                      ? 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' 
-                      : 'polygon(0 0, 0 0, 0 100%, 0 100%)',
-                  }}
-                >
-                  Kanban
-                </h1>
+                  <h1
+                    className={`text-4xl md:text-6xl font-bold tracking-tight text-white transform transition-[transform,opacity] ${
+                      shouldReduceMotion ? 'duration-0' : 'duration-700'
+                    } ease-out ${
+                      revealText ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
+                    }`}
+                  >
+                    Kanban
+                  </h1>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           <div 
             className="min-h-screen bg-black bg-cover bg-center bg-no-repeat bg-fixed flex items-center justify-center p-4 relative overflow-hidden"
@@ -110,8 +114,9 @@ export default function App() {
               <Route path="*" element={<Navigate to="/register" replace />} />
             </Routes>
           </div>
-        </KanbanProvider>
-      </AuthProvider>
+          </KanbanProvider>
+        </AuthProvider>
+      </MotionConfig>
     </Router>
   );
 }
