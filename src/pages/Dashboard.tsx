@@ -50,8 +50,8 @@ export default function Dashboard() {
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="fixed md:relative inset-y-0 left-0 z-50 h-full shrink-0 shadow-2xl md:shadow-none"
+              transition={{ type: 'tween', duration: 0.28, ease: 'easeOut' }}
+              className="fixed md:absolute inset-y-0 left-0 z-50 h-full w-[280px] md:w-[300px] shrink-0 shadow-2xl md:shadow-none"
             >
               <Sidebar
                 onOpenNewBoardModal={() => setIsCreateBoardOpen(true)}
@@ -59,7 +59,7 @@ export default function Dashboard() {
                 isDarkMode={isDarkMode}
                 toggleTheme={toggleTheme}
                 onLogout={logout}
-                showBrand={isSidebarVisible}
+                showBrand
               />
             </motion.div>
           </>
@@ -89,10 +89,11 @@ export default function Dashboard() {
         <Header
           onOpenAddTaskModal={() => setIsAddTaskOpen(true)}
           onOpenEditBoardModal={() => setIsEditBoardOpen(true)}
-          sidebarVisible={isSidebarVisible}
           onLogout={logout}
         />
-        <main className="flex-1 overflow-x-auto bg-[#F4F7FD] dark:bg-[#20212C] transition-colors duration-200">
+        <main className={`flex-1 overflow-x-auto bg-[#F4F7FD] dark:bg-[#20212C] transition-[margin] duration-300 ease-out ${
+          isSidebarVisible ? 'md:ml-[300px]' : ''
+        }`}>
           <BoardView
             onOpenAddColumnModal={() => setIsAddColumnOpen(true)}
             onOpenCreateBoardModal={() => setIsCreateBoardOpen(true)}
