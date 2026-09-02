@@ -7,9 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface HeaderProps {
   onOpenAddTaskModal: () => void;
   onOpenEditBoardModal: () => void;
+  showBoardTitle?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAddTaskModal, onOpenEditBoardModal }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenAddTaskModal,
+  onOpenEditBoardModal,
+  showBoardTitle = true,
+}) => {
   const { activeBoard, fetchBoards } = useKanban();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -39,9 +44,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAddTaskModal, onOpenEditBo
   return (
     <>
       <header className="h-24 bg-white dark:bg-[#2B2C37] px-6 flex items-center justify-between border-b border-[#E4EBFA] dark:border-[#3E3F4E]">
-        <h1 className="text-xl md:text-2xl font-bold text-[#000112] dark:text-white truncate">
-          {activeBoard ? activeBoard.title : 'No Active Board'}
-        </h1>
+        {showBoardTitle && (
+          <h1 className="text-xl md:text-2xl font-bold text-[#000112] dark:text-white truncate">
+            {activeBoard ? activeBoard.title : 'No Active Board'}
+          </h1>
+        )}
 
         <div className="flex items-center gap-4 relative">
           <motion.button

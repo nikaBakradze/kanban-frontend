@@ -104,6 +104,7 @@ export default function Dashboard() {
         <Header
           onOpenAddTaskModal={() => setIsAddTaskOpen(true)}
           onOpenEditBoardModal={() => setIsEditBoardOpen(true)}
+          showBoardTitle={isSidebarVisible}
           onLogout={logout}
         />
         <main className="flex-1 overflow-x-auto bg-[#F4F7FD] dark:bg-[#20212C] transition-colors duration-200">
