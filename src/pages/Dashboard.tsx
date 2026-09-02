@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useKanban } from '../context/KanbanContext';
 import { Sidebar } from '../components/Sidebar';
 import { Header } from '../components/Header';
 import { BoardView } from '../components/BoardView';
@@ -14,7 +13,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
   const { logout } = useAuth();
-  const { activeBoard } = useKanban();
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false);
@@ -81,8 +79,8 @@ export default function Dashboard() {
               className="fixed top-0 left-0 z-50 h-20 md:h-24 flex items-center gap-4 pl-6 md:pl-8 pointer-events-none"
             >
               <img src={kanbanLogo} alt="Kanban" className="w-6 h-6" />
-              <h1 className="max-w-[12rem] truncate text-xl md:text-2xl font-bold text-[#000112] dark:text-white tracking-wide">
-                {activeBoard?.title || 'kanban'}
+              <h1 className="text-2xl md:text-3xl font-bold text-[#000112] dark:text-white tracking-wide">
+                kanban
               </h1>
             </motion.div>
             <motion.button
@@ -104,7 +102,7 @@ export default function Dashboard() {
         <Header
           onOpenAddTaskModal={() => setIsAddTaskOpen(true)}
           onOpenEditBoardModal={() => setIsEditBoardOpen(true)}
-          showBoardTitle={isSidebarVisible}
+          sidebarVisible={isSidebarVisible}
           onLogout={logout}
         />
         <main className="flex-1 overflow-x-auto bg-[#F4F7FD] dark:bg-[#20212C] transition-colors duration-200">
