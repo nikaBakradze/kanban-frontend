@@ -262,7 +262,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           onDrop={(e) => handleDrop(e, col.id)}
           data-column-id={col.id}
           data-drop-target={draggedTaskId !== null ? 'true' : undefined}
-          className="w-70 shrink-0 flex flex-col gap-6"
+          className="w-70 shrink-0 min-h-[calc(100vh-3rem)] flex flex-col gap-6"
         >
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getColumnDotColor(col.title, index) }} />
@@ -271,7 +271,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
             </h3>
           </div>
 
-          <div className="flex flex-col gap-5">
+          <div className="flex min-h-100 flex-1 flex-col gap-5 pb-6">
             {col.tasks?.map((task) => {
               const completedCount = task.subtasks?.filter(
                 (st) => st.is_completed
