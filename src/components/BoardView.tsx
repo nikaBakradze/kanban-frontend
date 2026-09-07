@@ -26,6 +26,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const { activeBoard, updateTaskInBoard, loading } = useKanban();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [movingTaskId, setMovingTaskId] = useState<number | null>(null);
   const dragState = useRef<DragState | null>(null);
   const pointerStart = useRef<{ drag: DragState; x: number; y: number } | null>(null);
@@ -113,6 +114,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     const drag = { sourceColumnId, taskId };
     dragState.current = drag;
     setDraggedTaskId(taskId);
+    setDropTarget(null);
     e.dataTransfer.setData('sourceColumnId', sourceColumnId.toString());
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('taskId', taskId.toString());
@@ -121,6 +123,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const handleDragEnd = () => {
     dragState.current = null;
     setDraggedTaskId(null);
+    setDropTarget(null);
   };
 
   const handlePointerDown = (e: React.PointerEvent, sourceColumnId: number, taskId: number) => {
@@ -142,6 +145,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     suppressClick.current = true;
     setDraggedTaskId(start.drag.taskId);
     pointerTarget.current = getDropTargetAtPoint(e.clientX, e.clientY);
+    setDropTarget(pointerTarget.current);
   };
 
   const finishPointerDrag = (e: React.PointerEvent) => {
@@ -154,6 +158,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     pointerTarget.current = null;
     dragState.current = null;
     setDraggedTaskId(null);
+    setDropTarget(null);
     if (!start || !activeBoard) return;
     if (!wasDragging) {
       const task = activeBoard.columns
@@ -172,17 +177,20 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     pointerTarget.current = null;
     dragState.current = null;
     setDraggedTaskId(null);
+    setDropTarget(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
   };
 
   const handleTaskDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
+    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
@@ -208,6 +216,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     void moveTask(drag, location);
     dragState.current = null;
     setDraggedTaskId(null);
+    setDropTarget(null);
   };
 
   if (loading) {
@@ -263,7 +272,11 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           onDrop={(e) => handleDrop(e, col.id)}
           data-column-id={col.id}
           data-drop-target={draggedTaskId !== null ? 'true' : undefined}
-          className="w-70 shrink-0 min-h-[calc(100vh-3rem)] flex flex-col gap-6"
+          className={`w-70 shrink-0 min-h-[calc(100vh-3rem)] flex flex-col gap-6 transition-[background-color,box-shadow] duration-200 ${
+            dropTarget?.columnId === col.id && draggedTaskId !== null
+              ? 'rounded-lg bg-[#635FC7]/5 shadow-[0_0_0_2px_rgba(99,95,199,0.28)] dark:bg-[#635FC7]/10'
+              : ''
+          }`}
         >
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getColumnDotColor(col.title, index) }} />
@@ -278,51 +291,84 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                 (st) => st.is_completed
               ).length || 0;
               const totalSubtasks = task.subtasks?.length || 0;
+              const showInsertionBefore = dropTarget?.columnId === col.id
+                && dropTarget.taskId === task.id
+                && !dropTarget.after
+                && draggedTaskId !== null;
+              const showInsertionAfter = dropTarget?.columnId === col.id
+                && dropTarget.taskId === task.id
+                && dropTarget.after
+                && draggedTaskId !== null;
 
               return (
-                <motion.div
-                  key={task.id}
-                  layout
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  whileDrag={{ scale: 1.02, opacity: 0.75 }}
-                  transition={{
-                    layout: { type: 'tween', duration: 0.18, ease: 'easeOut' },
-                    scale: { type: 'spring', stiffness: 420, damping: 26 },
-                    opacity: { duration: 0.15, ease: 'easeOut' },
-                  }}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, col.id, task.id)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={handleTaskDragOver}
-                  onDrop={(e) => {
-                    e.stopPropagation();
-                    handleDrop(e, col.id, task.id);
-                  }}
-                  onPointerDown={(e) => handlePointerDown(e, col.id, task.id)}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={finishPointerDrag}
-                  onPointerCancel={handlePointerCancel}
-                  onClick={(e) => {
-                    if (suppressClick.current) {
-                      e.preventDefault();
-                      suppressClick.current = false;
-                      return;
-                    }
-                    setSelectedTask(task);
-                  }}
-                  style={{ touchAction: 'none', opacity: draggedTaskId === task.id ? 0.5 : 1 }}
-                  className="bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg shadow-sm hover:text-[#635FC7] cursor-pointer transition-colors group"
-                >
-                  <h4 className="font-bold text-[#000112] dark:text-white text-[15px] group-hover:text-[#635FC7] mb-2">
-                    {task.title}
-                  </h4>
-                  <p className="text-xs font-bold text-[#828FA3]">
-                    {completedCount} of {totalSubtasks} subtasks
-                  </p>
-                </motion.div>
+                <React.Fragment key={task.id}>
+                  {showInsertionBefore && (
+                    <div className="h-1 rounded-full bg-[#635FC7]/70 shadow-[0_0_10px_rgba(99,95,199,0.35)] transition-all duration-200" />
+                  )}
+                  <motion.div
+                    layout
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    whileDrag={{ scale: 1.02, opacity: 0.75 }}
+                    transition={{
+                      layout: { type: 'tween', duration: 0.18, ease: 'easeOut' },
+                      scale: { type: 'spring', stiffness: 420, damping: 26 },
+                      opacity: { duration: 0.15, ease: 'easeOut' },
+                    }}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, col.id, task.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleTaskDragOver}
+                    onDrop={(e) => {
+                      e.stopPropagation();
+                      handleDrop(e, col.id, task.id);
+                    }}
+                    onPointerDown={(e) => handlePointerDown(e, col.id, task.id)}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={finishPointerDrag}
+                    onPointerCancel={handlePointerCancel}
+                    onClick={(e) => {
+                      if (suppressClick.current) {
+                        e.preventDefault();
+                        suppressClick.current = false;
+                        return;
+                      }
+                      setSelectedTask(task);
+                    }}
+                    style={{ touchAction: 'none', opacity: draggedTaskId === task.id ? 0.5 : 1 }}
+                    className={`bg-white dark:bg-[#2B2C37] px-4 py-6 rounded-lg hover:text-[#635FC7] cursor-pointer transition-colors transition-shadow duration-200 group ${
+                      draggedTaskId === task.id
+                        ? 'relative z-10 shadow-xl ring-2 ring-[#635FC7]/30'
+                        : 'shadow-sm'
+                    }`}
+                  >
+                    <h4 className="font-bold text-[#000112] dark:text-white text-[15px] group-hover:text-[#635FC7] mb-2">
+                      {task.title}
+                    </h4>
+                    <p className="text-xs font-bold text-[#828FA3]">
+                      {completedCount} of {totalSubtasks} subtasks
+                    </p>
+                  </motion.div>
+                  {showInsertionAfter && (
+                    <div className="h-1 rounded-full bg-[#635FC7]/70 shadow-[0_0_10px_rgba(99,95,199,0.35)] transition-all duration-200" />
+                  )}
+                </React.Fragment>
               );
             })}
+            {dropTarget?.columnId === col.id
+              && dropTarget.taskId === null
+              && draggedTaskId !== null
+              && (
+                <div className="h-1 rounded-full bg-[#635FC7]/70 shadow-[0_0_10px_rgba(99,95,199,0.35)] transition-all duration-200" />
+              )}
+            {dropTarget?.columnId === col.id
+              && col.tasks.length === 0
+              && draggedTaskId !== null
+              && (
+                <div className="flex min-h-24 items-center justify-center rounded-lg border-2 border-dashed border-[#635FC7]/40 bg-[#635FC7]/5 text-xs font-bold text-[#635FC7] dark:bg-[#635FC7]/10">
+                  Drop here
+                </div>
+              )}
           </div>
         </div>
       ))}
