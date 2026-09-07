@@ -27,6 +27,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  const [hoveredColumnId, setHoveredColumnId] = useState<number | null>(null);
   const [movingTaskId, setMovingTaskId] = useState<number | null>(null);
   const dragState = useRef<DragState | null>(null);
   const pointerStart = useRef<{ drag: DragState; x: number; y: number } | null>(null);
@@ -148,6 +149,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     dragState.current = drag;
     setDraggedTaskId(taskId);
     setDropTarget(null);
+    setHoveredColumnId(null);
     e.dataTransfer.setData('sourceColumnId', sourceColumnId.toString());
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('taskId', taskId.toString());
@@ -157,6 +159,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     dragState.current = null;
     setDraggedTaskId(null);
     setDropTarget(null);
+    setHoveredColumnId(null);
   };
 
   const handlePointerDown = (e: React.PointerEvent, sourceColumnId: number, taskId: number) => {
@@ -192,6 +195,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     dragState.current = null;
     setDraggedTaskId(null);
     setDropTarget(null);
+    setHoveredColumnId(null);
     if (!start || !activeBoard) return;
     if (!wasDragging) {
       const task = activeBoard.columns
@@ -211,17 +215,20 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     dragState.current = null;
     setDraggedTaskId(null);
     setDropTarget(null);
+    setHoveredColumnId(null);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, columnId: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    setHoveredColumnId(columnId);
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
-  const handleDragEnter = (e: React.DragEvent) => {
+  const handleDragEnter = (e: React.DragEvent, columnId: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    setHoveredColumnId(columnId);
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
@@ -234,14 +241,18 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
 
   const handleTaskDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    const actualTarget = getDropTargetAtPoint(e.clientX, e.clientY);
-    setDropTarget(actualTarget);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const inside = e.clientX >= rect.left
+      && e.clientX <= rect.right
+      && e.clientY >= rect.top
+      && e.clientY <= rect.bottom;
+    if (!inside) setHoveredColumnId(null);
+    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
@@ -268,6 +279,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     dragState.current = null;
     setDraggedTaskId(null);
     setDropTarget(null);
+    setHoveredColumnId(null);
   };
 
   if (loading) {
@@ -318,7 +330,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     <main className="flex-1 overflow-x-auto p-6 flex gap-6 bg-[#F4F7FD] dark:bg-[#20212C] h-full items-start">
       {activeBoard.columns.map((col, index) => {
         const columnColor = getColumnDotColor(col.title, index);
-        const isDropTarget = dropTarget?.columnId === col.id && draggedTaskId !== null;
+        const isDropTarget = hoveredColumnId === col.id && draggedTaskId !== null;
         const columnTint = hexToRgba(columnColor, 0.07);
         const columnGlow = hexToRgba(columnColor, 0.24);
         const indicatorColor = hexToRgba(columnColor, 0.78);
@@ -326,8 +338,8 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
         return (
           <div
             key={col.id}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
+            onDragEnter={(e) => handleDragEnter(e, col.id)}
+            onDragOver={(e) => handleDragOver(e, col.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, col.id)}
             data-column-id={col.id}
