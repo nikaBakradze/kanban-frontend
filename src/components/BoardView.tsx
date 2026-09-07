@@ -79,6 +79,31 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     return { columnId, taskId, after: y >= rect.top + rect.height / 2 };
   };
 
+  const getDropTargetFromDragOver = (e: React.DragEvent): DropTarget | null => {
+    const target = e.currentTarget as HTMLElement;
+    const columnElement = target.closest<HTMLElement>('[data-column-id]');
+    if (!columnElement) return getDropTargetAtPoint(e.clientX, e.clientY);
+
+    const columnId = Number(columnElement.dataset.columnId);
+    if (!Number.isInteger(columnId)) return null;
+
+    const taskId = Number(target.dataset.taskId);
+    if (target.dataset.taskId && Number.isInteger(taskId)) {
+      const rect = target.getBoundingClientRect();
+      return { columnId, taskId, after: e.clientY >= rect.top + rect.height / 2 };
+    }
+
+    const taskElements = Array.from(columnElement.querySelectorAll<HTMLElement>('[data-task-id]'));
+    const firstTaskAfterPointer = taskElements.find((candidate) => {
+      const rect = candidate.getBoundingClientRect();
+      return e.clientY < rect.top + rect.height / 2;
+    });
+
+    return firstTaskAfterPointer
+      ? { columnId, taskId: Number(firstTaskAfterPointer.dataset.taskId), after: false }
+      : { columnId, taskId: null, after: true };
+  };
+
   const getDropPosition = (drag: DragState, target: DropTarget): number | null => {
     if (!activeBoard) return null;
     const targetColumn = activeBoard.columns.find((column) => column.id === target.columnId);
@@ -191,14 +216,22 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
+    setDropTarget(getDropTargetFromDragOver(e));
   };
 
   const handleTaskDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
-    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
+    setDropTarget(getDropTargetFromDragOver(e));
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const currentTarget = e.currentTarget as HTMLElement;
+    const relatedTarget = e.relatedTarget as Node | null;
+    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
+      setDropTarget(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
@@ -284,6 +317,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           <div
             key={col.id}
             onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, col.id)}
             data-column-id={col.id}
             data-drop-target={draggedTaskId !== null ? 'true' : undefined}
@@ -337,6 +371,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                       opacity: { duration: 0.15, ease: 'easeOut' },
                     }}
                     draggable
+                    data-task-id={task.id}
                     onDragStart={(e) => handleDragStart(e, col.id, task.id)}
                     onDragEnd={handleDragEnd}
                     onDragOver={handleTaskDragOver}
