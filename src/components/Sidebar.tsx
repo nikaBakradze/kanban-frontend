@@ -8,6 +8,7 @@ import lightThemeIcon from '../assets/light mode icon.svg';
 import darkThemeIcon from '../assets/dark mode icon.svg';
 import logoutIcon from '../assets/logout-16.ico';
 import { motion } from 'framer-motion';
+import { SidebarSkeleton } from './Skeleton';
 
 interface SidebarProps {
   onOpenNewBoardModal: () => void;
@@ -26,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   showBrand = true,
 }) => {
-  const { boards, activeBoard, selectBoard } = useKanban();
+  const { boards, activeBoard, selectBoard, loading } = useKanban();
 
   return (
     <aside className="w-[280px] md:w-[300px] bg-white dark:bg-[#2B2C37] border-r border-[#E4E8F1] dark:border-[#3E3F4E] flex flex-col justify-between h-full shrink-0 pb-6 pr-4 md:pr-6 transition-colors duration-200">
@@ -41,33 +42,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <p className="text-xs font-bold text-[#828FA3] uppercase tracking-[2.4px] mb-4 md:mb-5 pl-6 md:pl-8">
-          ALL BOARDS ({boards.length})
+          {loading ? 'ALL BOARDS' : `ALL BOARDS (${boards.length})`}
         </p>
 
         <div className="space-y-1">
-          {boards.map((board) => {
-            const isActive = activeBoard?.id === board.id;
-            return (
-              <motion.button
-                key={board.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => selectBoard(board.id)}
-                className={`w-full flex items-center gap-4 pl-6 md:pl-8 py-3.5 rounded-r-full font-bold text-[15px] transition-colors cursor-pointer ${
-                  isActive
-                    ? 'bg-[#635FC7] text-white'
-                    : 'text-[#828FA3] hover:bg-[#635FC7]/10 hover:text-[#635FC7] dark:hover:bg-white dark:hover:text-[#635FC7]'
-                }`}
-              >
-                <img
-                  src={isActive ? createBoardActiveIcon : createBoardInactiveIcon}
-                  alt="Board Icon"
-                  className="w-4 h-4 shrink-0"
-                />
-                <span className="truncate">{board.title}</span>
-              </motion.button>
-            );
-          })}
+          {loading ? (
+            <SidebarSkeleton />
+          ) : (
+            boards.map((board) => {
+              const isActive = activeBoard?.id === board.id;
+              return (
+                <motion.button
+                  key={board.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => selectBoard(board.id)}
+                  className={`w-full flex items-center gap-4 pl-6 md:pl-8 py-3.5 rounded-r-full font-bold text-[15px] transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-[#635FC7] text-white'
+                      : 'text-[#828FA3] hover:bg-[#635FC7]/10 hover:text-[#635FC7] dark:hover:bg-white dark:hover:text-[#635FC7]'
+                  }`}
+                >
+                  <img
+                    src={isActive ? createBoardActiveIcon : createBoardInactiveIcon}
+                    alt="Board Icon"
+                    className="w-4 h-4 shrink-0"
+                  />
+                  <span className="truncate">{board.title}</span>
+                </motion.button>
+              );
+            })
+          )}
 
           <motion.button
             whileHover={{ scale: 1.02 }}

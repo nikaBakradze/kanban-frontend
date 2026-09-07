@@ -33,8 +33,13 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const selectBoard = useCallback(async (id: number) => {
-    const fullBoard = await getBoardById(id);
-    setActiveBoard(fullBoard);
+    setLoading(true);
+    try {
+      const fullBoard = await getBoardById(id);
+      setActiveBoard(fullBoard);
+    } finally {
+      setLoading(false);
+    }
   }, [setActiveBoard]);
 
   const fetchBoards = useCallback(async (preferredBoardId?: number) => {

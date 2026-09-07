@@ -4,6 +4,7 @@ import { ViewTaskModal } from './modals/ViewTaskModal';
 import { updateTask } from '../api/kanbanApi';
 import type { Task } from '../types/kanban';
 import { motion } from 'framer-motion';
+import { BoardSkeleton } from './Skeleton';
 
 interface BoardViewProps {
   onOpenAddColumnModal: () => void;
@@ -210,7 +211,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   };
 
   if (loading) {
-    return <div className="flex-1 flex items-center justify-center text-[#828FA3] font-bold">Loading board data...</div>;
+    return <BoardSkeleton />;
   }
 
   if (!activeBoard) {
