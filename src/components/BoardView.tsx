@@ -219,7 +219,20 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget(getDropTargetFromDragOver(e));
+  };
+
   const handleTaskDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget(getDropTargetFromDragOver(e));
+  };
+
+  const handleTaskDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
@@ -229,9 +242,12 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const handleDragLeave = (e: React.DragEvent) => {
     const currentTarget = e.currentTarget as HTMLElement;
     const relatedTarget = e.relatedTarget as Node | null;
-    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
-      setDropTarget(null);
-    }
+    if (relatedTarget && currentTarget.contains(relatedTarget)) return;
+
+    const { clientX, clientY } = e;
+    window.requestAnimationFrame(() => {
+      setDropTarget(getDropTargetAtPoint(clientX, clientY));
+    });
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
@@ -316,6 +332,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
         return (
           <div
             key={col.id}
+            onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, col.id)}
@@ -374,6 +391,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                     data-task-id={task.id}
                     onDragStart={(e) => handleDragStart(e, col.id, task.id)}
                     onDragEnd={handleDragEnd}
+                    onDragEnter={handleTaskDragEnter}
                     onDragOver={handleTaskDragOver}
                     onDrop={(e) => {
                       e.stopPropagation();
