@@ -33,6 +33,15 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   const pointerDragging = useRef(false);
   const suppressClick = useRef(false);
   const pointerTarget = useRef<DropTarget | null>(null);
+  const dragLeaveFrame = useRef<number | null>(null);
+  const dragLifecycle = useRef(0);
+
+  const cancelDragLeaveCleanup = () => {
+    if (dragLeaveFrame.current !== null) {
+      window.cancelAnimationFrame(dragLeaveFrame.current);
+      dragLeaveFrame.current = null;
+    }
+  };
 
   const getColumnDotColor = (title: string, index: number) => {
     const cleanTitle = title.trim().toUpperCase();
@@ -144,6 +153,8 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   };
 
   const handleDragStart = (e: React.DragEvent, sourceColumnId: number, taskId: number) => {
+    cancelDragLeaveCleanup();
+    dragLifecycle.current += 1;
     const drag = { sourceColumnId, taskId };
     dragState.current = drag;
     setDraggedTaskId(taskId);
@@ -154,6 +165,8 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   };
 
   const handleDragEnd = () => {
+    cancelDragLeaveCleanup();
+    dragLifecycle.current += 1;
     dragState.current = null;
     setDraggedTaskId(null);
     setDropTarget(null);
@@ -214,18 +227,21 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    cancelDragLeaveCleanup();
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
+    cancelDragLeaveCleanup();
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
   const handleTaskDragOver = (e: React.DragEvent) => {
+    cancelDragLeaveCleanup();
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
@@ -233,6 +249,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   };
 
   const handleTaskDragEnter = (e: React.DragEvent) => {
+    cancelDragLeaveCleanup();
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
@@ -245,12 +262,18 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     if (relatedTarget && currentTarget.contains(relatedTarget)) return;
 
     const { clientX, clientY } = e;
-    window.requestAnimationFrame(() => {
+    const lifecycle = dragLifecycle.current;
+    cancelDragLeaveCleanup();
+    dragLeaveFrame.current = window.requestAnimationFrame(() => {
+      dragLeaveFrame.current = null;
+      if (lifecycle !== dragLifecycle.current || !dragState.current) return;
       setDropTarget(getDropTargetAtPoint(clientX, clientY));
     });
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
+    cancelDragLeaveCleanup();
+    dragLifecycle.current += 1;
     e.preventDefault();
     const state = dragState.current;
     const sourceColumnId = Number(e.dataTransfer.getData('sourceColumnId'));
