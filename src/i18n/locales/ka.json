@@ -1,0 +1,48 @@
+{
+  "common": {
+    "cancel": "გაუქმება", "save": "ცვლილებების შენახვა", "delete": "წაშლა", "close": "დახურვა",
+    "loading": "იტვირთება...", "creating": "იქმნება...", "adding": "ემატება...", "saving": "ინახება...",
+    "send": "გაგზავნა", "or": "ან", "sending": "იგზავნება...", "login": "შესვლა", "register": "რეგისტრაცია",
+    "logout": "გასვლა", "email": "ელფოსტა", "password": "პაროლი", "description": "აღწერა",
+    "title": "სათაური", "status": "სტატუსი", "togglePassword": "პაროლის ჩვენება", "toggleNewPassword": "ახალი პაროლის ჩვენება", "toggleConfirmPassword": "დადასტურების პაროლის ჩვენება", "subtasks": "ქვეამოცანები", "boardName": "დაფის სახელი",
+    "columnName": "სვეტის სახელი", "boardColumns": "დაფის სვეტები", "addNewColumn": "+ ახალი სვეტის დამატება",
+    "failed": "რაღაც შეცდომაა.", "failedCreateTask": "ამოცანის შექმნა ვერ მოხერხდა.",
+    "failedAddColumn": "სვეტის დამატება ვერ მოხერხდა.", "failedUpdateTask": "ამოცანის განახლება ვერ მოხერხდა.",
+    "failedSaveTask": "ამოცანის შენახვა ვერ მოხერხდა.", "failedDeleteTask": "ამოცანის წაშლა ვერ მოხერხდა.",
+    "failedUpdateSubtask": "ქვეამოცანის განახლება ვერ მოხერხდა.", "failedUpdateBoard": "დაფის განახლება ვერ მოხერხდა."
+  },
+  "language": { "label": "ენა", "english": "English", "georgian": "ქართული" },
+  "sidebar": {
+    "allBoards": "ყველა დაფა", "createBoard": "+ ახალი დაფის შექმნა", "hide": "გვერდითი ზოლის დამალვა",
+    "show": "გვერდითი ზოლის ჩვენება", "lightTheme": "ნათელი თემა", "darkTheme": "მუქი თემა"
+  },
+  "header": {
+    "noActiveBoard": "აქტიური დაფა არ არის", "addTask": "+ ახალი ამოცანის დამატება", "editBoard": "დაფის რედაქტირება",
+    "deleteBoard": "დაფის წაშლა", "deleteBoardTitle": "წავშალოთ ეს დაფა?",
+    "deleteBoardText": "დარწმუნებული ხართ, რომ გსურთ '{{title}}' დაფის წაშლა? ყველა სვეტი და ამოცანა წაიშლება და მოქმედება ვერ გაუქმდება.",
+    "deleting": "იშლება..."
+  },
+  "board": { "dropHere": "აქ ჩამოაგდეთ", "newColumn": "+ ახალი სვეტი", "noDescription": "აღწერა არ არის მითითებული." },
+  "modal": {
+    "addBoard": "ახალი დაფის დამატება", "addTask": "ახალი ამოცანის დამატება", "addColumn": "ახალი სვეტის დამატება",
+    "editBoard": "დაფის რედაქტირება", "editTask": "ამოცანის რედაქტირება", "createBoard": "ახალი დაფის შექმნა",
+    "createTask": "ამოცანის შექმნა", "createColumn": "სვეტის შექმნა", "saveChanges": "ცვლილებების შენახვა",
+    "addSubtask": "+ ახალი ქვეამოცანის დამატება", "newBoardPlaceholder": "მაგ. ვებ დიზაინი", "newColumnPlaceholder": "მაგ. მიმოხილვა",
+    "taskTitlePlaceholder": "მაგ. ყავის შესვენება", "descriptionPlaceholder": "მაგ. 5 წუთიანი შესვენება სასარგებლოა.",
+    "deleteTask": "ამოცანის წაშლა", "deleteTaskTitle": "წავშალოთ ეს ამოცანა?", "edit": "რედაქტირება", "noDescription": "აღწერა არ არის მითითებული.", "dropHere": "აქ ჩამოაგდეთ"
+  },
+  "auth": {
+    "authorizationFailed": "ავტორიზაცია ვერ მოხერხდა.", "passwordsMismatch": "პაროლები ერთმანეთს არ ემთხვევა",
+    "unknownError": "უცნობი შეცდომა", "registrationFailed": "რეგისტრაცია ვერ მოხერხდა", "fullName": "სრული სახელი",
+    "confirmPassword": "გაიმეორეთ პაროლი", "forgotPassword": "დაგავიწყდათ პაროლი?", "signIn": "შესვლა",
+    "signUp": "რეგისტრაცია", "google": "Google-ით გაგრძელება", "welcomeBack": "კეთილი იყოს თქვენი დაბრუნება",
+    "createAccount": "შექმენით თქვენი ანგარიში"
+  },
+  "passwordReset": {
+    "title": "პაროლის აღდგენა", "yourEmail": "თქვენი ელფოსტა", "instructionsSent": "პაროლის აღდგენის ინსტრუქცია გამოგეგზავნათ!",
+    "passwordChanged": "პაროლი წარმატებით შეიცვალა! გადამისამართება...", "invalidLink": "არასწორი ბმული",
+    "changeError": "პაროლის შეცვლისას შეცდომა", "newPassword": "ახალი პაროლი", "repeatPassword": "გაიმეორეთ პაროლი",
+    "update": "პაროლის განახლება", "backToLogin": "შესვლის გვერდზე დაბრუნება", "remember": "გახსოვთ პაროლი?",
+    "emailService": "ელფოსტის სერვისი frontend გარემოში არ არის კონფიგურირებული.", "failedEmail": "ელფოსტის გაგზავნა ვერ მოხერხდა."
+  }
+}

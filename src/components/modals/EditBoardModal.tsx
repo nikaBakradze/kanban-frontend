@@ -4,6 +4,7 @@ import axios from 'axios';
 import { updateBoard } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface EditBoardModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface EditBoardModalProps {
 
 export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose }) => {
   const { activeBoard, setActiveBoard } = useKanban();
+  const { t } = useTranslation();
   const [boardTitle, setBoardTitle] = useState('');
   const [columns, setColumns] = useState<{ id: number; title: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +75,7 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       console.error('Failed to update board:', error);
-      alert(message || 'Failed to update board.');
+      alert(message || t('common.failedUpdateBoard'));
     } finally {
       setIsSubmitting(false);
     }
@@ -98,13 +100,13 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
             className="bg-white dark:bg-[#2B2C37] w-full max-w-120 rounded-lg p-6 md:p-8 space-y-6 cursor-default relative shadow-xl max-h-[85vh] overflow-y-auto"
           >
             <h2 className="text-lg font-bold text-[#000112] dark:text-white">
-              Edit Board
+              {t('modal.editBoard')}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-[#828FA3] dark:text-white">
-                  Board Name
+                  {t('common.boardName')}
                 </label>
                 <input
                   type="text"
@@ -117,7 +119,7 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
 
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-[#828FA3] dark:text-white">
-                  Board Columns
+                  {t('common.boardColumns')}
                 </label>
                 <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
                   {columns.map((col, index) => (
@@ -147,7 +149,7 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
                   onClick={handleAddColumn}
                   className="w-full py-3 bg-[#635FC7]/10 dark:bg-white text-[#635FC7] hover:bg-[#635FC7]/20 font-bold text-sm rounded-full transition-colors cursor-pointer mt-2"
                 >
-                  + Add New Column
+                  {t('common.addNewColumn')}
                 </motion.button>
               </div>
 
@@ -158,7 +160,7 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
                 disabled={isSubmitting}
                 className="w-full py-3 bg-[#635FC7] hover:bg-[#A8A4FF] text-white font-bold text-sm rounded-full transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? t('common.saving') : t('modal.saveChanges')}
               </motion.button>
             </form>
           </motion.div>

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { createTask } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AddTaskModalProps {
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) => {
   const { activeBoard, updateTaskInBoard } = useKanban();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<number | string>('');
@@ -55,7 +57,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       console.error('Failed to create task:', error);
-      alert(message || 'Failed to create task.');
+      alert(message || t('common.failedCreateTask'));
     } finally {
       setLoading(false);
     }
@@ -79,14 +81,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
             onClick={(e) => e.stopPropagation()}
             className="bg-white dark:bg-[#2B2C37] w-full max-w-md rounded-lg p-6 md:p-8 space-y-6 shadow-xl cursor-default max-h-[90vh] overflow-y-auto"
           >
-            <h3 className="text-lg font-bold text-[#000112] dark:text-white">Add New Task</h3>
+            <h3 className="text-lg font-bold text-[#000112] dark:text-white">{t('modal.addTask')}</h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">Title</label>
+                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">{t('common.title')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Take coffee break"
+                  placeholder={t('modal.taskTitlePlaceholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7]"
@@ -95,9 +97,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">Description</label>
+                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">{t('common.description')}</label>
                 <textarea
-                  placeholder="e.g. It's always good to take a 5 min break."
+                  placeholder={t('modal.descriptionPlaceholder')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] h-20 resize-none"
@@ -105,7 +107,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">Subtasks</label>
+                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">{t('common.subtasks')}</label>
                 <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                   {subtasks.map((st, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -126,12 +128,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
                   onClick={handleAddSubtask}
                   className="w-full mt-2 py-2 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full cursor-pointer"
                 >
-                  + Add New Subtask
+                  {t('modal.addSubtask')}
                 </motion.button>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">Status</label>
+                <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">{t('common.status')}</label>
                 <select
                   value={effectiveColumnId}
                   onChange={(e) => setColumnId(e.target.value)}
@@ -153,7 +155,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
                   disabled={loading}
                   className="flex-1 py-2.5 md:py-2 text-sm font-bold text-white bg-[#635FC7] hover:bg-[#A8A4FF] rounded-full disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? 'Creating...' : 'Create Task'}
+                  {loading ? t('common.creating') : t('modal.createTask')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -162,7 +164,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
                   onClick={onClose}
                   className="px-4 py-2.5 md:py-2 text-sm font-bold text-[#828FA3] bg-gray-100 dark:bg-gray-700 rounded-full cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </motion.button>
               </div>
             </form>

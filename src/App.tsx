@@ -9,11 +9,13 @@ import { KanbanProvider } from './context/KanbanContext';
 import bgSvg from './assets/bg.svg';
 import kanbanLogo from './assets/kanban-logo.svg';
 import { MotionConfig, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
 
-  if (loading) return <div className="min-h-screen text-white flex items-center justify-center">Loading...</div>;
+  if (loading) return <div className="min-h-screen text-white flex items-center justify-center">{t('common.loading')}</div>;
   if (!user) return <Navigate to="/login" replace />;
 
   return children;

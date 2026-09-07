@@ -5,6 +5,7 @@ import { updateTask } from '../api/kanbanApi';
 import type { Task } from '../types/kanban';
 import { motion } from 'framer-motion';
 import { BoardSkeleton } from './Skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface BoardViewProps {
   onOpenAddColumnModal: () => void;
@@ -24,6 +25,7 @@ interface DropTarget {
 
 export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOpenCreateBoardModal }) => {
   const { activeBoard, updateTaskInBoard, loading } = useKanban();
+  const { t } = useTranslation();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -138,7 +140,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
       updateTaskInBoard(updatedTask);
     } catch (error) {
       console.error('Failed to move task:', error);
-      alert('Failed to move task.');
+      alert(t('common.failedUpdateTask'));
     } finally {
       setMovingTaskId(null);
     }
@@ -462,7 +464,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                     backgroundColor: hexToRgba(columnColor, 0.06),
                   }}
                 >
-                  Drop here
+                  {t('board.dropHere')}
                 </div>
               )}
           </div>
@@ -483,7 +485,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
           }}
           className="text-[#828FA3] group-hover:text-[#635FC7] font-bold text-2xl transition-colors cursor-pointer"
         >
-          + New Column
+          {t('board.newColumn')}
         </button>
       </motion.div>
 

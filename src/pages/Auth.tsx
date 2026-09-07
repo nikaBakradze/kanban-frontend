@@ -5,6 +5,8 @@ import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 import showIcon from '../assets/show password.svg';
 import hideIcon from '../assets/hide password.svg';
@@ -62,6 +64,7 @@ export default function Auth() {
   const [error, setError] = useState<string>('');
 
   const { login, register, googleLogin } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     setError('');
@@ -77,9 +80,9 @@ export default function Auth() {
       navigate('/dashboard');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'Authorization failed.');
+        setError(err.response?.data?.message || t('auth.authorizationFailed'));
       } else {
-        setError('unknown error');
+        setError(t('auth.unknownError'));
       }
     }
   };
@@ -88,7 +91,7 @@ export default function Auth() {
     e.preventDefault();
 
     if (regPassword !== regConfirmPassword) {
-      return setError('Passwords do not match');
+      return setError(t('auth.passwordsMismatch'));
     }
 
     setError('');
@@ -99,9 +102,9 @@ export default function Auth() {
       navigate('/dashboard');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'რეგისტრაცია ვერ მოხერხდა');
+        setError(err.response?.data?.message || t('auth.registrationFailed'));
       } else {
-        setError('უცნობი შეცდომა');
+        setError(t('auth.unknownError'));
       }
     }
   };
@@ -116,6 +119,7 @@ export default function Auth() {
       <div className="absolute -inset-1 rounded-3xl bg-linear-to-r from-blue-600/30 via-indigo-500/20 to-blue-600/30 opacity-70 blur-2xl pointer-events-none" />
 
       <div className="relative rounded-3xl border border-gray-800/80 bg-[#13151b]/70 p-8 text-white shadow-2xl backdrop-blur-md">
+        <div className="mb-4 flex justify-end"><LanguageSwitcher /></div>
         <div className="relative mb-6 flex items-center justify-between rounded-2xl border border-gray-700/50 bg-[#1c1f26]/80 p-1.5">
           <button
             type="button"
@@ -131,7 +135,7 @@ export default function Auth() {
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
-            Login
+            {t('common.login')}
           </button>
 
           <button
@@ -148,7 +152,7 @@ export default function Auth() {
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
-            Register
+            {t('common.register')}
           </button>
         </div>
 
@@ -182,7 +186,7 @@ export default function Auth() {
             >
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-300">
-                  Email
+                  {t('common.email')}
                 </label>
                 <motion.input
                   whileFocus={{ scale: 1.01 }}
@@ -198,7 +202,7 @@ export default function Auth() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-300">
-                  Password
+                  {t('common.password')}
                 </label>
                 <div className="relative">
                   <motion.input
@@ -218,7 +222,7 @@ export default function Auth() {
                   >
                     <img
                       src={showLoginPassword ? hideIcon : showIcon}
-                      alt="toggle password"
+                      alt={t('common.togglePassword')}
                       className="h-5 w-5"
                     />
                   </button>
@@ -229,7 +233,7 @@ export default function Auth() {
                     to="/forgot-password"
                     className="text-xs text-indigo-400 transition-colors hover:text-indigo-300 hover:underline"
                   >
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </Link>
                 </div>
               </div>
@@ -241,7 +245,7 @@ export default function Auth() {
                 type="submit"
                 className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-500"
               >
-                Login now
+                {t('common.login')}
               </motion.button>
             </motion.form>
           ) : (
@@ -256,7 +260,7 @@ export default function Auth() {
             >
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-300">
-                  Full Name
+                  {t('auth.fullName')}
                 </label>
                 <motion.input
                   whileFocus={{ scale: 1.01 }}
@@ -271,7 +275,7 @@ export default function Auth() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-300">
-                  Email
+                  {t('common.email')}
                 </label>
                 <motion.input
                   whileFocus={{ scale: 1.01 }}
@@ -287,7 +291,7 @@ export default function Auth() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-300">
-                  Password
+                  {t('common.password')}
                 </label>
                 <div className="relative">
                   <motion.input
@@ -307,7 +311,7 @@ export default function Auth() {
                   >
                     <img
                       src={showRegPassword ? hideIcon : showIcon}
-                      alt="toggle password"
+                      alt={t('common.togglePassword')}
                       className="h-5 w-5"
                     />
                   </button>
@@ -316,7 +320,7 @@ export default function Auth() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-300">
-                  Confirm Password
+                  {t('auth.confirmPassword')}
                 </label>
                 <div className="relative">
                   <motion.input
@@ -336,7 +340,7 @@ export default function Auth() {
                   >
                     <img
                       src={showRegConfirmPassword ? hideIcon : showIcon}
-                      alt="toggle confirm password"
+                      alt={t('common.toggleConfirmPassword')}
                       className="h-5 w-5"
                     />
                   </button>
@@ -350,7 +354,7 @@ export default function Auth() {
                 type="submit"
                 className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-500"
               >
-                Create An Account
+                {t('auth.signUp')}
               </motion.button>
             </motion.form>
           )}
@@ -358,7 +362,7 @@ export default function Auth() {
 
         <div className="my-6 flex items-center justify-between">
           <span className="w-1/5 border-b border-gray-800" />
-          <span className="text-xs uppercase tracking-wider text-gray-500">OR</span>
+          <span className="text-xs uppercase tracking-wider text-gray-500">{t('common.or')}</span>
           <span className="w-1/5 border-b border-gray-800" />
         </div>
 
@@ -389,7 +393,7 @@ export default function Auth() {
               />
             </svg>
             <span className="text-sm font-medium text-gray-200">
-              Continue with Google
+              {t('auth.google')}
             </span>
           </div>
 
@@ -401,11 +405,11 @@ export default function Auth() {
                     await googleLogin(credentialResponse.credential);
                     navigate('/dashboard');
                   } catch {
-                    setError('Google Authorization failed.');
+                    setError(t('auth.authorizationFailed'));
                   }
                 }
               }}
-              onError={() => setError('Could not sign in with Google.')}
+              onError={() => setError(t('auth.authorizationFailed'))}
             />
           </div>
         </motion.div>

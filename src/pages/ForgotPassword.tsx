@@ -3,12 +3,15 @@ import { Link } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 import API from '../api/axios';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -32,7 +35,7 @@ export default function ForgotPassword() {
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
       ];
       if (emailjsConfig.some((value) => !value)) {
-        throw new Error('Email service is not configured in the frontend environment.');
+        throw new Error(t('passwordReset.emailService'));
       }
 
       await emailjs.send(
@@ -47,7 +50,7 @@ export default function ForgotPassword() {
       );
 
       setMessage(
-        'Password reset instructions sent to your email!'
+        t('passwordReset.instructionsSent')
       );
     } catch (err: unknown) {
       console.log(
@@ -58,11 +61,11 @@ export default function ForgotPassword() {
       if (axios.isAxiosError(err)) {
         setError(
           err.response?.data?.message ||
-          'Something went wrong.'
+          t('common.failed')
         );
       } else {
         const emailError = err instanceof Error ? err.message : '';
-        setError(emailError || 'Failed to send email.');
+        setError(emailError || t('passwordReset.failedEmail'));
       }
     } finally {
       setLoading(false);
@@ -77,6 +80,7 @@ export default function ForgotPassword() {
         max-w-md
       "
     >
+     <div className="mb-4 flex justify-end"><LanguageSwitcher /></div>
       <div
         className="
           absolute
@@ -118,7 +122,7 @@ export default function ForgotPassword() {
             font-bold
           "
         >
-          Password Reset
+          {t('passwordReset.title')}
         </h2>
 
         {message && (
@@ -179,7 +183,7 @@ export default function ForgotPassword() {
                 font-medium
               "
             >
-              Your Email
+              {t('passwordReset.yourEmail')}
             </label>
 
             <input
@@ -227,7 +231,7 @@ export default function ForgotPassword() {
               disabled:opacity-50
             "
           >
-            {loading ? 'Sending...' : 'Send'}
+            {loading ? t('common.sending') : t('common.send')}
           </button>
         </form>
 
@@ -240,7 +244,7 @@ export default function ForgotPassword() {
             text-gray-400
           "
         >
-          Remember Password?{' '}
+          {t('passwordReset.remember')}{' '}
 
           <Link
             to="/login"
@@ -249,7 +253,7 @@ export default function ForgotPassword() {
               hover:underline
             "
           >
-            Login
+            {t('common.login')}
           </Link>
         </p>
       </div>

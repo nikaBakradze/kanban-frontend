@@ -4,6 +4,8 @@ import { useKanban } from '../context/KanbanContext';
 import { deleteBoard } from '../api/kanbanApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import kanbanLogo from '../assets/kanban-logo.svg';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface HeaderProps {
   onOpenAddTaskModal: () => void;
@@ -15,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenEditBoardModal,
 }) => {
   const { activeBoard, fetchBoards } = useKanban();
+  const { t } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       console.error('Failed to delete board:', error);
-      alert(message || 'Failed to delete board.');
+      alert(message || t('common.failedUpdateBoard'));
     } finally {
       setIsDeleting(false);
     }
@@ -51,11 +54,12 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
           </div>
           <h1 className="ml-6 min-w-0 truncate text-xl font-bold text-[#000112] dark:text-white md:text-2xl">
-            {activeBoard ? activeBoard.title : 'No Active Board'}
+            {activeBoard ? activeBoard.title : t('header.noActiveBoard')}
           </h1>
         </div>
 
         <div className="flex items-center gap-4 relative">
+          <LanguageSwitcher />
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -63,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
             disabled={!hasColumns}
             className="bg-[#635FC7] hover:bg-[#A8A4FF] disabled:opacity-50 text-white font-bold text-sm md:text-[15px] px-4 py-3 rounded-full cursor-pointer transition-colors flex items-center gap-1"
           >
-            <span>+ Add New Task</span>
+            <span>{t('header.addTask')}</span>
           </motion.button>
 
           <motion.button
@@ -97,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className="w-full text-left text-sm font-semibold text-[#828FA3] hover:text-[#635FC7] transition-colors cursor-pointer"
                 >
-                  Edit Board
+                  {t('header.editBoard')}
                 </button>
 
                 <button
@@ -108,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className="w-full text-left text-sm font-semibold text-[#EA5555] hover:opacity-80 transition-opacity cursor-pointer"
                 >
-                  Delete Board
+                  {t('header.deleteBoard')}
                 </button>
               </motion.div>
             )}
@@ -134,10 +138,10 @@ export const Header: React.FC<HeaderProps> = ({
               className="bg-white dark:bg-[#2B2C37] w-full max-w-120 rounded-lg p-8 space-y-6 cursor-default relative shadow-xl"
             >
               <h3 className="text-lg font-bold text-[#EA5555]">
-                Delete this board?
+                {t('header.deleteBoardTitle')}
               </h3>
               <p className="text-sm text-[#828FA3] leading-relaxed">
-                Are you sure you want to delete the '{activeBoard?.title}' board? This action will remove all columns and tasks and cannot be reversed.
+                {t('header.deleteBoardText', { title: activeBoard?.title })}
               </p>
 
               <div className="flex gap-4">
@@ -149,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({
                   disabled={isDeleting}
                   className="flex-1 py-3 text-sm font-bold text-white bg-[#EA5555] hover:bg-[#FF9898] rounded-full transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? t('header.deleting') : t('common.delete')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -158,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setIsDeleteModalOpen(false)}
                   className="flex-1 py-3 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full hover:bg-[#635FC7]/20 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </motion.button>
               </div>
             </motion.div>

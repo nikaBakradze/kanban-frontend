@@ -5,6 +5,8 @@ import axios from 'axios';
 
 import showIcon from '../assets/show password.svg';
 import hideIcon from '../assets/hide password.svg';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -18,16 +20,17 @@ export default function ResetPassword() {
   const [error, setError] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      return setError('პაროლები ერთმანეთს არ ემთხვევა');
+      return setError(t('auth.passwordsMismatch'));
     }
 
     if (!token) {
-      return setError('არასწორი ბმული');
+      return setError(t('passwordReset.invalidLink'));
     }
 
     setError('');
@@ -39,17 +42,17 @@ export default function ResetPassword() {
         newPassword,
       });
 
-      setMessage('Password successfully changed! Redirecting...');
+      setMessage(t('passwordReset.passwordChanged'));
 
       setTimeout(() => navigate('/login'), 2500);
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(
           err.response?.data?.message ||
-          'Error while changing password'
+          t('passwordReset.changeError')
         );
       } else {
-        setError('unknown error');
+        setError(t('auth.unknownError'));
       }
     } finally {
       setLoading(false);
@@ -64,6 +67,7 @@ export default function ResetPassword() {
         max-w-md
       "
     >
+     <div className="mb-4 flex justify-end"><LanguageSwitcher /></div>
       <div
         className="
           absolute
@@ -105,7 +109,7 @@ export default function ResetPassword() {
             font-bold
           "
         >
-          Reset Your Password
+          {t('passwordReset.title')}
         </h2>
 
         {message && (
@@ -161,7 +165,7 @@ export default function ResetPassword() {
                 font-medium
               "
             >
-              new password
+              {t('passwordReset.newPassword')}
             </label>
 
             <div
@@ -212,7 +216,7 @@ export default function ResetPassword() {
               >
                 <img
                   src={showPassword ? hideIcon : showIcon}
-                  alt="toggle new password"
+                  alt={t('common.toggleNewPassword')}
                   className="
                     h-5
                     w-5
@@ -231,7 +235,7 @@ export default function ResetPassword() {
                 font-medium
               "
             >
-              Repeat Password
+              {t('passwordReset.repeatPassword')}
             </label>
 
             <div
@@ -284,7 +288,7 @@ export default function ResetPassword() {
               >
                 <img
                   src={showConfirmPassword ? hideIcon : showIcon}
-                  alt="toggle confirm password"
+                  alt={t('common.toggleConfirmPassword')}
                   className="
                     h-5
                     w-5
@@ -314,7 +318,7 @@ export default function ResetPassword() {
               disabled:opacity-50
             "
           >
-            {loading ? 'Save...' : 'Update password'}
+            {loading ? t('common.saving') : t('passwordReset.update')}
           </button>
         </form>
 
@@ -334,7 +338,7 @@ export default function ResetPassword() {
               hover:underline
             "
           >
-            Back to Login page
+            {t('passwordReset.backToLogin')}
           </Link>
         </p>
       </div>

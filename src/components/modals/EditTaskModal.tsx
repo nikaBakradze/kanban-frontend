@@ -5,6 +5,7 @@ import { updateTask } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import type { Task, Subtask } from '../../types/kanban';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface EditTaskModalProps {
   task: Task | null;
@@ -14,6 +15,7 @@ interface EditTaskModalProps {
 
 export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose }) => {
   const { activeBoard, updateTaskInBoard } = useKanban();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<number | string>('');
@@ -75,7 +77,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       console.error('Edit task error:', error);
-      alert(message || 'Failed to update task.');
+      alert(message || t('common.failedUpdateTask'));
     } finally {
       setLoading(false);
     }
@@ -99,12 +101,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
             onClick={(e) => e.stopPropagation()}
             className="bg-white dark:bg-[#2B2C37] w-full max-w-120 rounded-lg p-6 md:p-8 space-y-6 cursor-default relative shadow-xl max-h-[85vh] overflow-y-auto"
           >
-            <h3 className="text-lg font-bold text-[#000112] dark:text-white">Edit Task</h3>
+            <h3 className="text-lg font-bold text-[#000112] dark:text-white">{t('modal.editTask')}</h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] dark:text-white mb-2">
-                  Title
+                  {t('common.title')}
                 </label>
                 <input
                   type="text"
@@ -117,7 +119,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
 
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] dark:text-white mb-2">
-                  Description
+                  {t('common.description')}
                 </label>
                 <textarea
                   value={description}
@@ -129,7 +131,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
 
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] dark:text-white mb-2">
-                  Subtasks
+                  {t('common.subtasks')}
                 </label>
                 <div className="space-y-3 max-h-36 overflow-y-auto pr-1">
                   {subtasks.map((st, index) => (
@@ -157,13 +159,13 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
                   onClick={handleAddSubtask}
                   className="w-full mt-3 py-2 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full hover:bg-[#635FC7]/20 transition-colors cursor-pointer"
                 >
-                  + Add New Subtask
+                  {t('modal.addSubtask')}
                 </motion.button>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] dark:text-white mb-2">
-                  Status
+                  {t('common.status')}
                 </label>
                 <select
                   value={columnId}
@@ -190,7 +192,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
                   disabled={loading}
                   className="flex-1 py-3 text-sm font-bold text-white bg-[#635FC7] hover:bg-[#A8A4FF] rounded-full transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? 'Saving...' : 'Save Changes'}
+                  {loading ? t('common.saving') : t('modal.saveChanges')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -199,7 +201,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
                   onClick={onClose}
                   className="px-6 py-3 text-sm font-bold text-[#828FA3] bg-gray-100 dark:bg-gray-700 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </motion.button>
               </div>
             </form>

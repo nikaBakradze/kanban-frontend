@@ -9,9 +9,11 @@ import { AddColumnModal } from '../components/modals/AddColumnModal';
 import { EditBoardModal } from '../components/modals/EditBoardModal';
 import showSidebarIcon from '../assets/show sidebar.svg';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function Dashboard() {
               onClick={() => setIsSidebarVisible(true)}
               className="fixed bottom-8 left-0 bg-[#635FC7] hover:bg-[#A8A4FF] text-white px-4 md:px-5 py-3.5 md:py-4 rounded-r-full transition-colors z-50 shadow-lg flex items-center justify-center cursor-pointer"
             >
-              <img src={showSidebarIcon} alt="Show Sidebar" className="w-4 h-4" />
+              <img src={showSidebarIcon} alt={t('sidebar.show')} className="w-4 h-4" />
             </motion.button>
           </>
         )}

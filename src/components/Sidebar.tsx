@@ -9,6 +9,7 @@ import darkThemeIcon from '../assets/dark mode icon.svg';
 import logoutIcon from '../assets/logout-16.ico';
 import { motion } from 'framer-motion';
 import { SidebarSkeleton } from './Skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   onOpenNewBoardModal: () => void;
@@ -28,6 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   showBrand = true,
 }) => {
   const { boards, activeBoard, selectBoard, loading } = useKanban();
+  const { t } = useTranslation();
 
   return (
     <aside className="w-[280px] md:w-[300px] bg-white dark:bg-[#2B2C37] border-r border-[#E4E8F1] dark:border-[#3E3F4E] flex flex-col justify-between h-full shrink-0 pb-6 pr-4 md:pr-6 transition-colors duration-200">
@@ -42,7 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         <p className="text-xs font-bold text-[#828FA3] uppercase tracking-[2.4px] mb-4 md:mb-5 pl-6 md:pl-8">
-          {loading ? 'ALL BOARDS' : `ALL BOARDS (${boards.length})`}
+          {loading ? t('sidebar.allBoards') : `${t('sidebar.allBoards')} (${boards.length})`}
         </p>
 
         <div className="space-y-1">
@@ -65,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <img
                     src={isActive ? createBoardActiveIcon : createBoardInactiveIcon}
-                    alt="Board Icon"
+                    alt={t('common.boardName')}
                     className="w-4 h-4 shrink-0"
                   />
                   <span className="truncate">{board.title}</span>
@@ -82,17 +84,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <img
               src={createBoardActiveIcon}
-              alt="Create Board Icon"
+              alt={t('sidebar.createBoard')}
               className="w-4 h-4 shrink-0"
             />
-            <span>+ Create New Board</span>
+            <span>{t('sidebar.createBoard')}</span>
           </motion.button>
         </div>
       </div>
 
       <div className="pl-6 md:pl-8 space-y-2 pt-4 shrink-0">
         <div className="bg-[#F4F7FD] dark:bg-[#20212C] rounded-md py-3.5 flex items-center justify-center gap-6 transition-colors duration-200">
-          <img src={lightThemeIcon} alt="Light Theme" className="w-5 h-5" />
+          <img src={lightThemeIcon} alt={t('sidebar.lightTheme')} className="w-5 h-5" />
           
           <button
             type="button"
@@ -106,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
 
-          <img src={darkThemeIcon} alt="Dark Theme" className="w-4 h-4" />
+          <img src={darkThemeIcon} alt={t('sidebar.darkTheme')} className="w-4 h-4" />
         </div>
 
         <motion.button
@@ -116,8 +118,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onLogout}
           className="flex items-center gap-4 text-[#EA5555] font-bold text-[15px] hover:bg-[#EA5555]/10 w-full py-3 pl-4 rounded-r-full transition-colors cursor-pointer"
         >
-          <img src={logoutIcon} alt="Logout" className="w-4 h-4 shrink-0" />
-          <span>Logout</span>
+          <img src={logoutIcon} alt={t('common.logout')} className="w-4 h-4 shrink-0" />
+          <span>{t('common.logout')}</span>
         </motion.button>
 
         <motion.button
@@ -126,8 +128,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onHideSidebar}
           className="flex items-center gap-4 text-[#828FA3] font-bold text-[15px] hover:text-[#635FC7] dark:hover:bg-[#635FC7]/10 w-full py-3 rounded-r-full transition-colors cursor-pointer"
         >
-          <img src={hideSidebarIcon} alt="Hide Sidebar" className="w-4 h-4 shrink-0" />
-          <span>Hide Sidebar</span>
+          <img src={hideSidebarIcon} alt={t('sidebar.hide')} className="w-4 h-4 shrink-0" />
+          <span>{t('sidebar.hide')}</span>
         </motion.button>
       </div>
     </aside>

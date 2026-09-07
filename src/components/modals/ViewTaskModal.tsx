@@ -6,6 +6,7 @@ import { useKanban } from '../../context/KanbanContext';
 import type { Task, Subtask } from '../../types/kanban';
 import { EditTaskModal } from './EditTaskModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface ViewTaskModalProps {
   task: Task | null;
@@ -14,6 +15,7 @@ interface ViewTaskModalProps {
 
 export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) => {
   const { activeBoard, updateTaskInBoard, updateSubtaskInBoard, removeTaskFromBoard } = useKanban();
+  const { t } = useTranslation();
   const [showOptions, setShowOptions] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -50,7 +52,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
       updateSubtaskInBoard(normalizedSubtask);
     } catch (error: unknown) {
       setSubtasks((prev) => prev.map((st, i) => i === index ? { ...st, is_completed: current.is_completed } : st));
-      alert(axios.isAxiosError(error) ? error.response?.data?.message || 'Failed to update subtask.' : 'Failed to update subtask.');
+      alert(axios.isAxiosError(error) ? error.response?.data?.message || t('common.failedUpdateSubtask') : t('common.failedUpdateSubtask'));
     }
   };
 
@@ -77,7 +79,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       console.error('Save error details:', error);
-      alert(message || 'Failed to save task.');
+      alert(message || t('common.failedSaveTask'));
     } finally {
       setIsSaving(false);
     }
@@ -92,7 +94,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       console.error('Delete error:', error);
-      alert(message || 'Failed to delete task.');
+      alert(message || t('common.failedDeleteTask'));
     }
   };
 
@@ -152,7 +154,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
                         }}
                         className="w-full text-left text-sm font-semibold text-[#828FA3] hover:text-[#635FC7] transition-colors cursor-pointer"
                       >
-                        Edit Task
+                        {t('modal.editTask')}
                       </button>
                       <button
                         type="button"
@@ -162,7 +164,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
                         }}
                         className="w-full text-left text-sm font-semibold text-[#EA5555] hover:opacity-80 transition-opacity cursor-pointer"
                       >
-                        Delete Task
+                        {t('modal.deleteTask')}
                       </button>
                     </motion.div>
                   )}
@@ -172,13 +174,13 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
 
             {/* Description */}
             <p className="text-sm text-[#828FA3] leading-relaxed">
-              {task.description || 'No description provided.'}
+              {task.description || t('modal.noDescription')}
             </p>
 
             {/* Subtasks Section */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-[#828FA3] dark:text-white tracking-wider">
-                Subtasks ({completedSubtasksCount} of {totalSubtasksCount})
+                {t('common.subtasks')} ({completedSubtasksCount} of {totalSubtasksCount})
               </h3>
 
               <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
@@ -225,7 +227,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
             {/* Current Status */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-[#828FA3] dark:text-white">
-                Current Status
+                {t('common.status')}
               </label>
               <select
                 value={selectedColumnId}
@@ -253,7 +255,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
               disabled={isSaving}
               className="w-full py-3 bg-[#635FC7] hover:bg-[#A8A4FF] text-white font-bold text-sm rounded-full transition-colors disabled:opacity-50 cursor-pointer"
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? t('common.saving') : t('modal.saveChanges')}
             </motion.button>
           </motion.div>
         </motion.div>
@@ -287,7 +289,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
               onClick={(e) => e.stopPropagation()}
               className="bg-white dark:bg-[#2B2C37] w-full max-w-120 rounded-lg p-6 md:p-8 space-y-6 cursor-default relative shadow-xl"
             >
-              <h3 className="text-lg font-bold text-[#EA5555]">Delete this task?</h3>
+              <h3 className="text-lg font-bold text-[#EA5555]">{t('modal.deleteTaskTitle')}</h3>
               <p className="text-sm text-[#828FA3] leading-relaxed">
                 Are you sure you want to delete the '{task.title}' task and its subtasks? This action cannot be reversed.
               </p>
@@ -299,7 +301,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
                   onClick={handleConfirmDelete}
                   className="flex-1 py-3 text-sm font-bold text-white bg-[#EA5555] hover:bg-[#FF9898] rounded-full transition-colors cursor-pointer"
                 >
-                  Delete
+                  {t('common.delete')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -308,7 +310,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
                   onClick={() => setIsDeleteModalOpen(false)}
                   className="flex-1 py-3 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full hover:bg-[#635FC7]/20 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </motion.button>
               </div>
             </motion.div>

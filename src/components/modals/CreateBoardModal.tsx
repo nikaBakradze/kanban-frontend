@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createBoard } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface CreateBoardModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface CreateBoardModalProps {
 
 export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose }) => {
   const { fetchBoards } = useKanban();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [columns, setColumns] = useState<string[]>(['Todo', 'Doing', 'Done']);
   const [loading, setLoading] = useState(false);
@@ -67,16 +69,16 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
             onClick={(e) => e.stopPropagation()}
             className="bg-white dark:bg-[#2B2C37] w-full max-w-md rounded-lg p-6 md:p-8 space-y-6 cursor-default relative shadow-xl max-h-[90vh] overflow-y-auto"
           >
-            <h3 className="text-lg font-bold text-[#000112] dark:text-white">Add New Board</h3>
+            <h3 className="text-lg font-bold text-[#000112] dark:text-white">{t('modal.addBoard')}</h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">
-                  Board Name
+                  {t('common.boardName')}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Web Design"
+                  placeholder={t('modal.newBoardPlaceholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7]"
@@ -86,7 +88,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
 
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">
-                  Board Columns
+                  {t('common.boardColumns')}
                 </label>
                 <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
                   {columns.map((col, index) => (
@@ -116,7 +118,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
                   onClick={handleAddColumn}
                   className="w-full mt-3 py-2 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full hover:bg-[#635FC7]/20 transition-colors cursor-pointer"
                 >
-                  + Add New Column
+                  {t('common.addNewColumn')}
                 </motion.button>
               </div>
 
@@ -128,7 +130,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
                   disabled={loading}
                   className="flex-1 py-2.5 md:py-2 text-sm font-bold text-white bg-[#635FC7] hover:bg-[#A8A4FF] rounded-full transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? 'Creating...' : 'Create New Board'}
+                  {loading ? t('common.creating') : t('modal.createBoard')}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -137,7 +139,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
                   onClick={onClose}
                   className="px-4 py-2.5 md:py-2 text-sm font-bold text-[#828FA3] bg-gray-100 dark:bg-gray-700 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </motion.button>
               </div>
             </form>
