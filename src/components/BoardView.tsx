@@ -236,12 +236,14 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
+    setHoveredColumnId(getDropTargetAtPoint(e.clientX, e.clientY)?.columnId ?? null);
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
   const handleTaskDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    setHoveredColumnId(getDropTargetAtPoint(e.clientX, e.clientY)?.columnId ?? null);
     setDropTarget(getDropTargetFromDragOver(e));
   };
 
@@ -251,8 +253,9 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
       && e.clientX <= rect.right
       && e.clientY >= rect.top
       && e.clientY <= rect.bottom;
-    if (!inside) setHoveredColumnId(null);
-    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
+    const actualTarget = getDropTargetAtPoint(e.clientX, e.clientY);
+    setHoveredColumnId(inside ? actualTarget?.columnId ?? null : null);
+    setDropTarget(actualTarget);
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
