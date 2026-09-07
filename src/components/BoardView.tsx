@@ -44,6 +44,14 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
     return fallbackColors[index % fallbackColors.length];
   };
 
+  const hexToRgba = (hex: string, alpha: number) => {
+    const value = hex.replace('#', '');
+    const red = Number.parseInt(value.slice(0, 2), 16);
+    const green = Number.parseInt(value.slice(2, 4), 16);
+    const blue = Number.parseInt(value.slice(4, 6), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  };
+
   const getDropTargetAtPoint = (x: number, y: number): DropTarget | null => {
     const element = document.elementFromPoint(x, y);
     const columnElement = element?.closest<HTMLElement>('[data-column-id]');
@@ -265,21 +273,31 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
 
   return (
     <main className="flex-1 overflow-x-auto p-6 flex gap-6 bg-[#F4F7FD] dark:bg-[#20212C] h-full items-start">
-      {activeBoard.columns.map((col, index) => (
-        <div
-          key={col.id}
-          onDragOver={handleDragOver}
-          onDrop={(e) => handleDrop(e, col.id)}
-          data-column-id={col.id}
-          data-drop-target={draggedTaskId !== null ? 'true' : undefined}
-          className={`w-70 shrink-0 min-h-[calc(100vh-3rem)] flex flex-col gap-6 transition-[background-color,box-shadow] duration-200 ${
-            dropTarget?.columnId === col.id && draggedTaskId !== null
-              ? 'rounded-lg bg-[#635FC7]/5 shadow-[0_0_0_2px_rgba(99,95,199,0.28)] dark:bg-[#635FC7]/10'
-              : ''
-          }`}
-        >
+      {activeBoard.columns.map((col, index) => {
+        const columnColor = getColumnDotColor(col.title, index);
+        const isDropTarget = dropTarget?.columnId === col.id && draggedTaskId !== null;
+        const columnTint = hexToRgba(columnColor, 0.07);
+        const columnGlow = hexToRgba(columnColor, 0.24);
+        const indicatorColor = hexToRgba(columnColor, 0.78);
+
+        return (
+          <div
+            key={col.id}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, col.id)}
+            data-column-id={col.id}
+            data-drop-target={draggedTaskId !== null ? 'true' : undefined}
+            className={`w-70 shrink-0 min-h-[calc(100vh-3rem)] flex flex-col gap-6 transition-[background-color,box-shadow,outline] duration-200 ${
+              isDropTarget ? 'rounded-lg' : ''
+            }`}
+            style={isDropTarget ? {
+              backgroundColor: columnTint,
+              outline: `1px solid ${hexToRgba(columnColor, 0.42)}`,
+              boxShadow: `0 0 22px ${columnGlow}`,
+            } : undefined}
+          >
           <div className="flex items-center gap-3">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getColumnDotColor(col.title, index) }} />
+            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: columnColor }} />
             <h3 className="text-xs font-bold text-[#828FA3] uppercase tracking-[2.4px]">
               {col.title} ({col.tasks?.length || 0})
             </h3>
@@ -303,7 +321,10 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
               return (
                 <React.Fragment key={task.id}>
                   {showInsertionBefore && (
-                    <div className="h-1 rounded-full bg-[#635FC7]/70 shadow-[0_0_10px_rgba(99,95,199,0.35)] transition-all duration-200" />
+                    <div
+                      className="h-1 rounded-full transition-all duration-200"
+                      style={{ backgroundColor: indicatorColor, boxShadow: `0 0 10px ${columnGlow}` }}
+                    />
                   )}
                   <motion.div
                     layout
@@ -350,7 +371,10 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
                     </p>
                   </motion.div>
                   {showInsertionAfter && (
-                    <div className="h-1 rounded-full bg-[#635FC7]/70 shadow-[0_0_10px_rgba(99,95,199,0.35)] transition-all duration-200" />
+                    <div
+                      className="h-1 rounded-full transition-all duration-200"
+                      style={{ backgroundColor: indicatorColor, boxShadow: `0 0 10px ${columnGlow}` }}
+                    />
                   )}
                 </React.Fragment>
               );
@@ -359,19 +383,30 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
               && dropTarget.taskId === null
               && draggedTaskId !== null
               && (
-                <div className="h-1 rounded-full bg-[#635FC7]/70 shadow-[0_0_10px_rgba(99,95,199,0.35)] transition-all duration-200" />
+                <div
+                  className="h-1 rounded-full transition-all duration-200"
+                  style={{ backgroundColor: indicatorColor, boxShadow: `0 0 10px ${columnGlow}` }}
+                />
               )}
             {dropTarget?.columnId === col.id
               && col.tasks.length === 0
               && draggedTaskId !== null
               && (
-                <div className="flex min-h-24 items-center justify-center rounded-lg border-2 border-dashed border-[#635FC7]/40 bg-[#635FC7]/5 text-xs font-bold text-[#635FC7] dark:bg-[#635FC7]/10">
+                <div
+                  className="flex min-h-24 items-center justify-center rounded-lg border-2 border-dashed text-xs font-bold"
+                  style={{
+                    borderColor: hexToRgba(columnColor, 0.42),
+                    color: columnColor,
+                    backgroundColor: hexToRgba(columnColor, 0.06),
+                  }}
+                >
                   Drop here
                 </div>
               )}
           </div>
-        </div>
-      ))}
+          </div>
+        );
+      })}
       <motion.div
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
