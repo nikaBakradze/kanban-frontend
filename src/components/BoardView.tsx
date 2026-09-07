@@ -240,11 +240,8 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    const currentTarget = e.currentTarget as HTMLElement;
-    const relatedTarget = e.relatedTarget as Node | null;
-    if (relatedTarget && currentTarget.contains(relatedTarget)) return;
-
-    setDropTarget(getDropTargetAtPoint(e.clientX, e.clientY));
+    const actualTarget = getDropTargetAtPoint(e.clientX, e.clientY);
+    setDropTarget(actualTarget);
   };
 
   const handleDrop = (e: React.DragEvent, targetColumnId: number, targetTaskId: number | null = null) => {
