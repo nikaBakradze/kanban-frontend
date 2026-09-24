@@ -120,6 +120,9 @@ export default function Auth() {
       <div className="absolute -inset-1 rounded-3xl bg-linear-to-r from-blue-600/30 via-indigo-500/20 to-blue-600/30 opacity-70 blur-2xl pointer-events-none" />
 
       <div className="relative rounded-3xl border border-gray-800/80 bg-[#13151b]/70 p-8 text-white shadow-2xl backdrop-blur-md">
+        <h1 className="mb-4 text-center text-xl font-bold tracking-tight text-white">
+          𝐊𝐀𝐍𝐁𝐀𝐍 Task Management
+        </h1>
         <div className="mb-4 flex justify-end"><LanguageSwitcher /></div>
         <div className="relative mb-6 flex items-center justify-between rounded-2xl border border-gray-700/50 bg-[#1c1f26]/80 p-1.5">
           <button

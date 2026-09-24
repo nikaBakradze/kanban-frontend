@@ -82,7 +82,7 @@ export default function App() {
                     }}
                   />
 
-                  <h1
+                  <div
                     className={`text-4xl md:text-6xl font-bold tracking-tight text-white transform transition-[transform,opacity] ${
                       shouldReduceMotion ? 'duration-0' : 'duration-700'
                     } ease-out ${
@@ -90,7 +90,7 @@ export default function App() {
                     }`}
                   >
                     Kanban
-                  </h1>
+                  </div>
                 </div>
               </div>
             )}
