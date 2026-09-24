@@ -99,7 +99,8 @@ export default function Auth() {
     try {
       // განახლებული ენდფოინთი /api/auth/register
       await register(regFullName, regEmail, regPassword);
-      navigate('/dashboard');
+      sessionStorage.setItem('pendingVerificationEmail', regEmail.trim());
+      navigate('/verify-email', { state: { email: regEmail.trim() } });
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || t('auth.registrationFailed'));

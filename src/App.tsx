@@ -4,6 +4,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import OtpVerificationDeck from './components/auth/OtpVerificationDeck';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
 import bgSvg from './assets/bg.svg';
@@ -103,6 +104,7 @@ export default function App() {
               <Route path="/register" element={<Auth />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<OtpVerificationDeck />} />
               
               <Route
                 path="/dashboard"
