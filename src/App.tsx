@@ -4,6 +4,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
 import OtpVerificationDeck from './components/auth/OtpVerificationDeck';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
@@ -115,7 +116,7 @@ export default function App() {
                 }
               />
 
-              <Route path="*" element={<Navigate to="/register" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
           </KanbanProvider>
