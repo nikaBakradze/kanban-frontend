@@ -25,6 +25,7 @@ export default function OtpVerificationDeck() {
   const [resendMessage, setResendMessage] = useState('');
   const [shake, setShake] = useState(0);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const submittedCodeRef = useRef('');
   const submittedCode = code.join('');
 
   useEffect(() => {
@@ -52,20 +53,23 @@ export default function OtpVerificationDeck() {
   }, [isVerified, navigate]);
 
   useEffect(() => {
-    if (submittedCode.length !== CODE_LENGTH || isVerifying || isVerified || !email) return;
+    if (submittedCode.length !== CODE_LENGTH || isVerifying || isVerified || !email || submittedCodeRef.current === submittedCode) return;
+    submittedCodeRef.current = submittedCode;
 
     const verifyCode = async () => {
       setIsVerifying(true);
       setError('');
       setResendMessage('');
       try {
-        await axios.post('/api/auth/verify-email', { email, code: submittedCode });
+        await axios.post('/api/auth/verify-email', { email, code: submittedCode }, { timeout: 15000 });
         setIsVerified(true);
         sessionStorage.removeItem('pendingVerificationEmail');
       } catch (err: unknown) {
         setError(
           axios.isAxiosError(err)
-            ? err.response?.data?.message || 'Invalid or expired verification code.'
+            ? err.code === 'ECONNABORTED'
+              ? 'Verification timed out. Please try again.'
+              : err.response?.data?.message || 'Invalid or expired verification code.'
             : 'Unable to verify the code. Please try again.',
         );
         setShake((current) => current + 1);
@@ -87,6 +91,7 @@ export default function OtpVerificationDeck() {
       next[index] = digit;
       return next;
     });
+    submittedCodeRef.current = '';
     if (digit && index < CODE_LENGTH - 1) inputRefs.current[index + 1]?.focus();
   };
 
@@ -113,13 +118,18 @@ export default function OtpVerificationDeck() {
     setError('');
     setResendMessage('');
     try {
-      await axios.post('/api/auth/resend-code', { email });
+      await axios.post('/api/auth/resend-code', { email }, { timeout: 15000 });
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setResendMessage('A new verification code was sent.');
+      setCode(Array(CODE_LENGTH).fill(''));
+      submittedCodeRef.current = '';
+      inputRefs.current[0]?.focus();
     } catch (err: unknown) {
       setError(
         axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Unable to resend the verification code.'
+          ? err.code === 'ECONNABORTED'
+            ? 'Resending timed out. Please try again.'
+            : err.response?.data?.message || 'Unable to resend the verification code.'
           : 'Unable to resend the verification code.',
       );
     } finally {
