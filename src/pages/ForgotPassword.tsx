@@ -11,6 +11,7 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
   const { t } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -34,6 +35,7 @@ export default function ForgotPassword() {
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
       ];
+
       if (emailjsConfig.some((value) => !value)) {
         throw new Error(t('passwordReset.emailService'));
       }
@@ -64,8 +66,13 @@ export default function ForgotPassword() {
           t('common.failed')
         );
       } else {
-        const emailError = err instanceof Error ? err.message : '';
-        setError(emailError || t('passwordReset.failedEmail'));
+        const emailError =
+          err instanceof Error ? err.message : '';
+
+        setError(
+          emailError ||
+          t('passwordReset.failedEmail')
+        );
       }
     } finally {
       setLoading(false);
@@ -80,43 +87,36 @@ export default function ForgotPassword() {
         max-w-md
       "
     >
-     <div className="mb-4 flex justify-end"><LanguageSwitcher /></div>
-      <div
-        className="
-          absolute
-          -inset-1
-
-          rounded-3xl
-          bg-linear-to-r
-          from-blue-600/30
-          via-indigo-500/20
-          to-blue-600/30
-
-          opacity-70
-          blur-2xl
-        "
-      />
-
+      {/* Forgot Password Card */}
       <div
         className="
           relative
-
           rounded-3xl
           border
           border-gray-800/80
-
           bg-[#13151b]/70
           p-8
-
           text-white
           shadow-2xl
           backdrop-blur-md
         "
       >
+<div
+  className="
+    absolute
+    right-6
+    top-6
+    z-10
+  "
+>
+  <LanguageSwitcher />
+</div>
+
+        {/* Title */}
         <h2
           className="
             mb-6
-
+            pr-20
             text-center
             text-3xl
             font-bold
@@ -125,18 +125,16 @@ export default function ForgotPassword() {
           {t('passwordReset.title')}
         </h2>
 
+        {/* Success Message */}
         {message && (
           <div
             className="
               mb-4
-
               rounded-lg
               border
               border-green-500
               bg-green-500/20
-
               p-3
-
               text-center
               text-sm
               text-green-400
@@ -146,18 +144,16 @@ export default function ForgotPassword() {
           </div>
         )}
 
+        {/* Error Message */}
         {error && (
           <div
             className="
               mb-4
-
               rounded-lg
               border
               border-red-500
               bg-red-500/20
-
               p-3
-
               text-center
               text-sm
               text-red-400
@@ -167,6 +163,7 @@ export default function ForgotPassword() {
           </div>
         )}
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="
@@ -178,7 +175,6 @@ export default function ForgotPassword() {
               className="
                 mb-1
                 block
-
                 text-sm
                 font-medium
               "
@@ -194,17 +190,13 @@ export default function ForgotPassword() {
               placeholder="example@gmail.com"
               className="
                 w-full
-
                 rounded-xl
                 border
                 border-gray-700/60
                 bg-[#1c1f26]/60
-
                 p-3
-
                 text-white
                 placeholder-gray-500
-
                 focus:border-blue-500
                 focus:outline-none
               "
@@ -216,29 +208,26 @@ export default function ForgotPassword() {
             disabled={loading}
             className="
               w-full
-
               rounded-xl
               bg-blue-600
-
               py-3
-
               font-semibold
               transition
               duration-200
-
               hover:bg-blue-700
-
               disabled:opacity-50
             "
           >
-            {loading ? t('common.sending') : t('common.send')}
+            {loading
+              ? t('common.sending')
+              : t('common.send')}
           </button>
         </form>
 
+        {/* Login Link */}
         <p
           className="
             mt-6
-
             text-center
             text-sm
             text-gray-400

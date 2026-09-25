@@ -7,6 +7,9 @@
     <loc>https://kanban-board.me/login</loc>
   </url>
   <url>
-    <loc>https://kanban-board.me/register</loc>
+    <loc>https://kanban-board.me/registration</loc>
+  </url>
+  <url>
+    <loc>https://kanban-board.me/contact</loc>
   </url>
 </urlset>

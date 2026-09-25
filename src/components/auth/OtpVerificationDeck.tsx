@@ -3,6 +3,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Check, RotateCcw } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
 const CODE_LENGTH = 4;
 const RESEND_COOLDOWN_SECONDS = 45;
@@ -11,6 +13,7 @@ export default function OtpVerificationDeck() {
   const navigate = useNavigate();
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
+  const { t } = useTranslation();
   const [email] = useState(() => {
     const stateEmail = (location.state as { email?: string } | null)?.email;
     return stateEmail || sessionStorage.getItem('pendingVerificationEmail') || '';
@@ -68,9 +71,9 @@ export default function OtpVerificationDeck() {
         setError(
           axios.isAxiosError(err)
             ? err.code === 'ECONNABORTED'
-              ? 'Verification timed out. Please try again.'
-              : err.response?.data?.message || 'Invalid or expired verification code.'
-            : 'Unable to verify the code. Please try again.',
+              ? t('otp.resendTimeout')
+              : err.response?.data?.message || t('otp.invalid')
+            : t('otp.invalid'),
         );
         setShake((current) => current + 1);
       } finally {
@@ -79,7 +82,7 @@ export default function OtpVerificationDeck() {
     };
 
     void verifyCode();
-  }, [email, isVerifying, isVerified, navigate, submittedCode]);
+  }, [email, isVerifying, isVerified, navigate, submittedCode, t]);
 
   const updateCode = (index: number, value: string) => {
     const digit = value.replace(/\D/g, '').slice(-1);
@@ -128,9 +131,9 @@ export default function OtpVerificationDeck() {
       setError(
         axios.isAxiosError(err)
           ? err.code === 'ECONNABORTED'
-            ? 'Resending timed out. Please try again.'
-            : err.response?.data?.message || 'Unable to resend the verification code.'
-          : 'Unable to resend the verification code.',
+            ? t('otp.resendTimeout')
+            : err.response?.data?.message || t('otp.resendFailed')
+          : t('otp.resendFailed'),
       );
     } finally {
       setIsResending(false);
@@ -154,18 +157,21 @@ export default function OtpVerificationDeck() {
         transition={{ duration: shouldReduceMotion ? 0 : 0.4 }}
         className="relative w-full rounded-[24px] border border-[#22272e] bg-[#121518] px-5 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:px-10 sm:py-10"
       >
+        <div className="mb-5 flex justify-end">
+          <LanguageSwitcher />
+        </div>
         <div className="mb-10 flex items-start justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7d8792]">Component <span className="text-[#b5bec8]">• 100</span></p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight">OTP Verification</h1>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7d8792]">{t('otp.component')} <span className="text-[#b5bec8]">• 100</span></p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t('otp.verification')}</h1>
           </div>
-          <span className="rounded-full border border-[#303842] bg-[#1b2025] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b5bec8]">Deck</span>
+          <span className="rounded-full border border-[#303842] bg-[#1b2025] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b5bec8]">{t('otp.deck')}</span>
         </div>
 
         <p className="text-sm text-[#8f9aa5]">
-          {isVerified ? 'Setting up your session...' : <>We sent a 4-digit code to <span className="text-[#d9e0e6]">{email}</span></>}
+          {isVerified ? t('otp.settingUp') : <>{t('otp.sentTo')} <span className="text-[#d9e0e6]">{email}</span></>}
         </p>
-        <h2 className="mt-2 text-2xl font-medium">{isVerified ? 'Verified' : 'Enter your code'}</h2>
+        <h2 className="mt-2 text-2xl font-medium">{isVerified ? t('otp.verified') : t('otp.enterCode')}</h2>
 
         <motion.div
           className="relative mx-auto my-12 flex h-28 w-full max-w-[310px] cursor-text items-center justify-center gap-3 sm:max-w-[350px]"
@@ -195,7 +201,7 @@ export default function OtpVerificationDeck() {
               >
                 <input
                   ref={(element) => { inputRefs.current[index] = element; }}
-                  aria-label={`Verification code digit ${index + 1}`}
+                  aria-label={t('otp.digit', { count: index + 1 })}
                   autoComplete={index === 0 ? 'one-time-code' : 'off'}
                   inputMode="numeric"
                   maxLength={1}
@@ -215,19 +221,19 @@ export default function OtpVerificationDeck() {
         <div className="min-h-12 text-center text-sm" aria-live="polite">
           {error && <p className="text-[#ff9b9b]">{error}</p>}
           {resendMessage && <p className="text-[#9de5ae]">{resendMessage}</p>}
-          {isVerifying && <p className="text-[#8f9aa5]">Checking your code...</p>}
+          {isVerifying && <p className="text-[#8f9aa5]">{t('otp.checking')}</p>}
         </div>
 
         {!isVerified && (
           <div className="mt-6 text-center text-sm text-[#7d8792]">
-            Didn&apos;t get a code?{' '}
+            {t('otp.didNotGet')}{' '}
             <button
               type="button"
               onClick={handleResend}
               disabled={cooldown > 0 || isResending}
               className="font-medium text-[#b8e8c4] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#59636d]"
             >
-              {isResending ? 'Sending...' : cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend code'}
+              {isResending ? t('otp.sending') : cooldown > 0 ? t('otp.resendIn', { seconds: cooldown }) : t('otp.resend')}
             </button>
           </div>
         )}
@@ -235,7 +241,7 @@ export default function OtpVerificationDeck() {
 
       <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#22272e] bg-[#121518]/95 px-4 py-2 text-[11px] text-[#77828d] shadow-lg">
         <RotateCcw size={12} className="text-[#9de5ae]" />
-        Type it, paste it, Orbit — Enter 1234 is the good one.
+        {t('otp.hint')}
       </div>
     </main>
   );

@@ -6,6 +6,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import OtpVerificationDeck from './components/auth/OtpVerificationDeck';
+import LandingPage from './pages/LandingPage';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
 import bgSvg from './assets/bg.svg';
@@ -100,9 +101,10 @@ export default function App() {
             style={{ backgroundImage: `url(${bgSvg})` }}
           >
             <Routes>
-              <Route path="/" element={<Navigate to="/register" replace />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Auth />} />
               <Route path="/register" element={<Auth />} />
+              <Route path="/registration" element={<Auth />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify-email" element={<OtpVerificationDeck />} />
