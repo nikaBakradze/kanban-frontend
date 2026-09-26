@@ -79,7 +79,7 @@ export default function Auth() {
     try {
       // განახლებული ენდფოინთი /api/auth/login
       await login(loginEmail, loginPassword);
-      navigate('/dashboard');
+      navigate((location.state as { from?: string } | null)?.from || '/dashboard');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || t('auth.authorizationFailed'));
@@ -406,7 +406,7 @@ export default function Auth() {
                 if (credentialResponse.credential) {
                   try {
                     await googleLogin(credentialResponse.credential);
-                    navigate('/dashboard');
+                    navigate((location.state as { from?: string } | null)?.from || '/dashboard');
                   } catch {
                     setError(t('auth.authorizationFailed'));
                   }

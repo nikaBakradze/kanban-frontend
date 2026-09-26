@@ -10,6 +10,8 @@ import { EditBoardModal } from '../components/modals/EditBoardModal';
 import showSidebarIcon from '../assets/show sidebar.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { WorkspaceCreationModal } from '../components/WorkspaceCreationModal';
+import { WorkspaceMembers } from '../components/WorkspaceMembers';
 
 export default function Dashboard() {
   const { logout } = useAuth();
@@ -20,6 +22,8 @@ export default function Dashboard() {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
   const [isEditBoardOpen, setIsEditBoardOpen] = useState(false);
+  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -95,7 +99,6 @@ export default function Dashboard() {
         <Header
           onOpenAddTaskModal={() => setIsAddTaskOpen(true)}
           onOpenEditBoardModal={() => setIsEditBoardOpen(true)}
-          onLogout={logout}
         />
         <main className={`flex-1 overflow-x-auto bg-[#F4F7FD] dark:bg-[#20212C] transition-[margin] duration-300 ease-out ${
           isSidebarVisible ? 'md:ml-[300px]' : ''
@@ -126,6 +129,14 @@ export default function Dashboard() {
         isOpen={isEditBoardOpen}
         onClose={() => setIsEditBoardOpen(false)}
       />
+      <button type="button" onClick={() => setIsCreateWorkspaceOpen(true)} className="fixed bottom-6 right-6 z-40 rounded-full bg-[#635FC7] px-4 py-3 text-sm font-bold text-white shadow-lg">
+        + Workspace
+      </button>
+      <button type="button" onClick={() => setIsMembersOpen(true)} className="fixed bottom-6 right-44 z-40 rounded-full bg-white px-4 py-3 text-sm font-bold text-[#635FC7] shadow-lg dark:bg-[#2B2C37]">
+        Members
+      </button>
+      <WorkspaceCreationModal isOpen={isCreateWorkspaceOpen} onClose={() => setIsCreateWorkspaceOpen(false)} />
+      <WorkspaceMembers isOpen={isMembersOpen} onClose={() => setIsMembersOpen(false)} />
     </div>
   );
 }

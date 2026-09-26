@@ -3,6 +3,7 @@ import { createBoard } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '../../context/WorkspaceContext';
 
 interface CreateBoardModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CreateBoardModalProps {
 
 export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose }) => {
   const { fetchBoards } = useKanban();
+  const { activeWorkspace } = useWorkspace();
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [columns, setColumns] = useState<string[]>(['Todo', 'Doing', 'Done']);
@@ -39,7 +41,11 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
     try {
       setLoading(true);
       const filteredColumns = columns.filter((col) => col.trim() !== '');
-      const board = await createBoard({ title: title.trim(), columns: filteredColumns });
+      const board = await createBoard({
+        title: title.trim(),
+        columns: filteredColumns,
+        ...(activeWorkspace?.type !== 'PERSONAL' && activeWorkspace ? { workspace_id: activeWorkspace.id } : {}),
+      });
       await fetchBoards(board.id);
       setTitle('');
       setColumns(['Todo', 'Doing', 'Done']);

@@ -4,6 +4,10 @@ import { createTask } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { getMembers } from '../../api/workspaceApi';
+import { assignTask } from '../../api/kanbanApi';
+import type { WorkspaceMember } from '../../types/workspace';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -12,12 +16,19 @@ interface AddTaskModalProps {
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) => {
   const { activeBoard, updateTaskInBoard } = useKanban();
+  const { activeWorkspace } = useWorkspace();
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [columnId, setColumnId] = useState<number | string>('');
   const [subtasks, setSubtasks] = useState<string[]>(['', '']);
   const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
+
+  React.useEffect(() => {
+    if (isOpen && activeWorkspace && activeWorkspace.type !== 'PERSONAL') void getMembers(activeWorkspace.id).then(setMembers);
+  }, [activeWorkspace, isOpen]);
 
   if (!isOpen || !activeBoard) return null;
 
@@ -47,7 +58,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
         column_id: targetColumnId,
         subtasks: filteredSubtasks.map((st) => ({ title: st })),
       });
-      updateTaskInBoard(task);
+      if (activeWorkspace?.type !== 'PERSONAL' && assigneeIds.length) await assignTask(task.id, assigneeIds);
+      updateTaskInBoard({ ...task, assignee_ids: assigneeIds });
 
       setTitle('');
       setDescription('');
@@ -95,6 +107,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
                   required
                 />
               </div>
+
+              {activeWorkspace?.type !== 'PERSONAL' && (
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-[#828FA3] dark:text-white">Assigned to</label>
+                  <div className="space-y-2">
+                    {members.map((member) => (
+                      <label key={member.user_id} className="flex items-center gap-2 text-sm text-[#000112] dark:text-white">
+                        <input type="checkbox" checked={assigneeIds.includes(member.user_id)} onChange={() => setAssigneeIds((ids) => ids.includes(member.user_id) ? ids.filter((id) => id !== member.user_id) : [...ids, member.user_id])} />
+                        {member.full_name || member.email}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-[#828FA3] mb-2 dark:text-white">{t('common.description')}</label>

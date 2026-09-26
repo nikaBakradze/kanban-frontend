@@ -51,7 +51,7 @@ export default function OtpVerificationDeck() {
 
   useEffect(() => {
     if (!isVerified) return;
-    const timer = window.setTimeout(() => navigate('/dashboard', { replace: true }), 900);
+    const timer = window.setTimeout(() => navigate('/onboarding', { replace: true }), 900);
     return () => window.clearTimeout(timer);
   }, [isVerified, navigate]);
 

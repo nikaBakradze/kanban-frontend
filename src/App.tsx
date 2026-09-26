@@ -7,8 +7,11 @@ import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import OtpVerificationDeck from './components/auth/OtpVerificationDeck';
 import LandingPage from './pages/LandingPage';
+import InvitePage from './pages/InvitePage';
+import Onboarding from './pages/Onboarding';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
+import { WorkspaceProvider } from './context/WorkspaceContext';
 import bgSvg from './assets/bg.svg';
 import kanbanLogo from './assets/kanban-logo.svg';
 import { MotionConfig, useReducedMotion } from 'framer-motion';
@@ -60,6 +63,7 @@ export default function App() {
     <Router>
       <MotionConfig reducedMotion="user">
         <AuthProvider>
+          <WorkspaceProvider>
           <KanbanProvider>
             {showSplash && (
               <div
@@ -108,6 +112,8 @@ export default function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify-email" element={<OtpVerificationDeck />} />
+              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+              <Route path="/invite/:token" element={<InvitePage />} />
               
               <Route
                 path="/dashboard"
@@ -122,6 +128,7 @@ export default function App() {
             </Routes>
           </div>
           </KanbanProvider>
+          </WorkspaceProvider>
         </AuthProvider>
       </MotionConfig>
     </Router>

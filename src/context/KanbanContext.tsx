@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { Board, Column, Task, Subtask } from '../types/kanban';
 import { getBoards, getBoardById } from '../api/kanbanApi';
 import { useAuth } from './AuthContext';
+import { useWorkspace } from './WorkspaceContext';
 
 interface KanbanContextType {
   boards: Board[];
@@ -22,6 +23,7 @@ const KanbanContext = createContext<KanbanContextType | undefined>(undefined);
 
 export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
+  const { activeWorkspace, loading: workspaceLoading } = useWorkspace();
   const [boards, setBoards] = useState<Board[]>([]);
   const [activeBoard, setActiveBoardState] = useState<Board | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,9 +49,12 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLoading(true);
     try {
       const data = await getBoards();
-      setBoards(data);
+      const workspaceBoards = data.filter((board) => activeWorkspace?.type === 'PERSONAL'
+        ? board.workspace_id == null
+        : board.workspace_id === activeWorkspace?.id);
+      setBoards(workspaceBoards);
       const currentId = preferredBoardId ?? activeBoardRef.current?.id;
-      const boardToSelect = data.find((board) => board.id === currentId) ?? data[0];
+      const boardToSelect = workspaceBoards.find((board) => board.id === currentId) ?? workspaceBoards[0];
       if (boardToSelect) {
         await selectBoard(boardToSelect.id);
       } else {
@@ -59,11 +64,11 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setLoading(false);
     }
-  }, [selectBoard, user]);
+  }, [activeWorkspace, selectBoard, user]);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (user) {
+    if (authLoading || workspaceLoading) return;
+    if (user && activeWorkspace) {
       void fetchBoards();
     } else {
       setBoards([]);
@@ -71,7 +76,7 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setActiveBoardState(null);
       setLoading(false);
     }
-  }, [authLoading, fetchBoards, user]);
+  }, [activeWorkspace, authLoading, fetchBoards, user, workspaceLoading]);
 
   const updateBoardState = useCallback((transform: (board: Board) => Board) => {
     const current = activeBoardRef.current;

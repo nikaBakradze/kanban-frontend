@@ -13,6 +13,7 @@ export interface TaskInput {
   column_id: number;
   position?: number;
   subtasks?: SubtaskInput[];
+  workspace_id?: number;
 }
 
 export interface TaskUpdateInput {
@@ -37,12 +38,14 @@ const normalizeTask = (task: Task): Task => ({
     task_id: Number(subtask.task_id),
     is_completed: Boolean(Number(subtask.is_completed)),
   })),
+  assignee_ids: task.assignee_ids?.map(Number),
 });
 
 const normalizeBoard = (board: Board): Board => ({
   ...board,
   id: Number(board.id),
   user_id: Number(board.user_id),
+  workspace_id: board.workspace_id == null ? null : Number(board.workspace_id),
   columns: (board.columns || []).map((column) => ({
     ...column,
     id: Number(column.id),
@@ -62,7 +65,7 @@ export const getBoardById = async (id: number): Promise<Board> => {
   return normalizeBoard(data);
 };
 
-export const createBoard = async (data: { title: string; columns: string[] }): Promise<Board> => {
+export const createBoard = async (data: { title: string; columns: string[]; workspace_id?: number }): Promise<Board> => {
   const response = await API.post('/api/boards', data);
   return normalizeBoard(unwrap(response.data));
 };
@@ -107,4 +110,9 @@ export const toggleSubtask = async (id: number, is_completed: boolean): Promise<
     task_id: Number(subtask.task_id),
     is_completed: Boolean(Number(subtask.is_completed)),
   };
+};
+
+export const assignTask = async (id: number, user_ids: number[]): Promise<{ task_id: number; user_ids: number[] }> => {
+  const { data } = await API.put(`/api/tasks/${id}/assignees`, { user_ids });
+  return { task_id: Number(data.task_id), user_ids: data.user_ids.map(Number) };
 };

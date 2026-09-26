@@ -10,6 +10,7 @@ import logoutIcon from '../assets/logout-16.ico';
 import { motion } from 'framer-motion';
 import { SidebarSkeleton } from './Skeleton';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 interface SidebarProps {
   onOpenNewBoardModal: () => void;
@@ -30,10 +31,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { boards, activeBoard, selectBoard, loading } = useKanban();
   const { t } = useTranslation();
+  const { workspaces, activeWorkspace, selectWorkspace } = useWorkspace();
 
   return (
     <aside className="w-[280px] md:w-[300px] bg-white dark:bg-[#2B2C37] border-r border-[#E4E8F1] dark:border-[#3E3F4E] flex flex-col justify-between h-full shrink-0 pb-6 pr-4 md:pr-6 transition-colors duration-200">
       <div className="overflow-y-auto flex-1">
+        <div className="px-6 md:px-8 pt-4 pb-5">
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[2px] text-[#828FA3]">
+            Workspace
+          </label>
+          <select
+            value={activeWorkspace?.id ?? ''}
+            onChange={(event) => selectWorkspace(Number(event.target.value))}
+            className="w-full rounded-md border border-[#828FA3]/25 bg-transparent px-3 py-2 text-sm font-semibold text-[#000112] dark:text-white"
+          >
+            {workspaces.map((workspace) => (
+              <option key={workspace.id} value={workspace.id} className="text-[#000112]">
+                {workspace.name}
+              </option>
+            ))}
+          </select>
+        </div>
         {showBrand && (
           <div className="h-20 md:h-24 flex items-center gap-4 pl-6 md:pl-8">
             <img src={kanbanLogo} alt="Kanban" className="w-6 h-6" />

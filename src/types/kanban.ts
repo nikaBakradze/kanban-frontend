@@ -12,6 +12,7 @@ export interface Task {
   column_id: number;
   position: number;
   subtasks: Subtask[];
+  assignee_ids?: number[];
 }
 
 export interface Column {
@@ -26,5 +27,6 @@ export interface Board {
   id: number;
   title: string;
   user_id: number;
+  workspace_id?: number | null;
   columns: Column[];
 }
