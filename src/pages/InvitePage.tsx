@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { acceptInvite, validateInvite } from '../api/workspaceApi';
 import type { InviteValidation } from '../types/workspace';
 
 export default function InvitePage() {
   const { token = '' } = useParams();
   const { user, loading: authLoading } = useAuth();
+  const { refreshWorkspaces } = useWorkspace();
   const location = useLocation();
   const navigate = useNavigate();
   const [invite, setInvite] = useState<InviteValidation | null>(null);
@@ -33,7 +35,7 @@ export default function InvitePage() {
     setJoining(true);
     try {
       const result = await acceptInvite(token);
-      localStorage.setItem('activeWorkspaceId', String(result.workspace_id));
+      await refreshWorkspaces(result.workspace_id);
       navigate('/dashboard', { replace: true });
     } catch (reason: unknown) {
       setError(axios.isAxiosError(reason) ? reason.response?.data?.message || 'Unable to join workspace.' : 'Unable to join workspace.');

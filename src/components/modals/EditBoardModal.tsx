@@ -5,6 +5,8 @@ import { updateBoard } from '../../api/kanbanApi';
 import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { canManageBoard, workspaceManagementPermissionMessage } from '../../utils/workspacePermissions';
 
 interface EditBoardModalProps {
   isOpen: boolean;
@@ -13,6 +15,8 @@ interface EditBoardModalProps {
 
 export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose }) => {
   const { activeBoard, setActiveBoard } = useKanban();
+  const { activeWorkspace } = useWorkspace();
+  const canManageBoards = canManageBoard(activeWorkspace);
   const { t } = useTranslation();
   const [boardTitle, setBoardTitle] = useState('');
   const [columns, setColumns] = useState<{ id: number; title: string }[]>([]);
@@ -57,7 +61,7 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!boardTitle.trim()) return;
+    if (!canManageBoards || !boardTitle.trim()) return;
 
     try {
       setIsSubmitting(true);
@@ -112,8 +116,10 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
                   type="text"
                   value={boardTitle}
                   onChange={(e) => setBoardTitle(e.target.value)}
+                  disabled={!canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
                   required
-                  className="w-full px-4 py-3 text-sm font-semibold border border-[#828FA3]/25 rounded-md bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7]"
+                  className="w-full px-4 py-3 text-sm font-semibold border border-[#828FA3]/25 rounded-md bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -128,13 +134,20 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
                         type="text"
                         value={col.title}
                         onChange={(e) => handleColumnChange(index, e.target.value)}
+                        disabled={!canManageBoards}
                         required
-                        className="flex-1 px-4 py-2.5 text-sm font-semibold border border-[#828FA3]/25 rounded-md bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7]"
+                        className="flex-1 px-4 py-2.5 text-sm font-semibold border border-[#828FA3]/25 rounded-md bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <button
                         type="button"
                         onClick={() => handleRemoveColumn(index)}
-                        className="text-[#828FA3] hover:text-[#EA5555] p-2 cursor-pointer transition-colors font-bold text-lg"
+                        disabled={!canManageBoards}
+                        title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                        className={`p-2 transition-colors font-bold text-lg ${
+                          canManageBoards
+                            ? 'text-[#828FA3] hover:text-[#EA5555] cursor-pointer'
+                            : 'text-[#828FA3]/50 cursor-not-allowed'
+                        }`}
                       >
                         ✕
                       </button>
@@ -143,22 +156,29 @@ export const EditBoardModal: React.FC<EditBoardModalProps> = ({ isOpen, onClose 
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={canManageBoards ? { scale: 1.02 } : undefined}
+                  whileTap={canManageBoards ? { scale: 0.98 } : undefined}
                   type="button"
                   onClick={handleAddColumn}
-                  className="w-full py-3 bg-[#635FC7]/10 dark:bg-white text-[#635FC7] hover:bg-[#635FC7]/20 font-bold text-sm rounded-full transition-colors cursor-pointer mt-2"
+                  disabled={!canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                  className={`w-full py-3 bg-[#635FC7]/10 dark:bg-white text-[#635FC7] font-bold text-sm rounded-full transition-colors mt-2 ${
+                    canManageBoards ? 'hover:bg-[#635FC7]/20 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   {t('common.addNewColumn')}
                 </motion.button>
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={canManageBoards && !isSubmitting ? { scale: 1.02 } : undefined}
+                whileTap={canManageBoards && !isSubmitting ? { scale: 0.98 } : undefined}
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-[#635FC7] hover:bg-[#A8A4FF] text-white font-bold text-sm rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                disabled={isSubmitting || !canManageBoards}
+                title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                className={`w-full py-3 bg-[#635FC7] text-white font-bold text-sm rounded-full transition-colors ${
+                  canManageBoards ? 'hover:bg-[#A8A4FF] cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                }`}
               >
                 {isSubmitting ? t('common.saving') : t('modal.saveChanges')}
               </motion.button>

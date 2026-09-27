@@ -6,6 +6,8 @@ import type { Task } from '../types/kanban';
 import { motion } from 'framer-motion';
 import { BoardSkeleton } from './Skeleton';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { canManageBoard, canManageColumn, workspaceManagementPermissionMessage } from '../utils/workspacePermissions';
 
 interface BoardViewProps {
   onOpenAddColumnModal: () => void;
@@ -25,6 +27,9 @@ interface DropTarget {
 
 export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOpenCreateBoardModal }) => {
   const { activeBoard, updateTaskInBoard, loading } = useKanban();
+  const { activeWorkspace } = useWorkspace();
+  const canManageBoards = canManageBoard(activeWorkspace);
+  const canManageColumns = canManageColumn(activeWorkspace);
   const { t } = useTranslation();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
@@ -299,10 +304,16 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
             There are no boards available. Create a new board to get started.
           </p>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onOpenCreateBoardModal}
-            className="bg-[#635FC7] hover:bg-[#A8A4FF] text-white font-bold text-[15px] px-8 py-4 rounded-full cursor-pointer transition-colors shadow-md"
+            whileHover={canManageBoards ? { scale: 1.05 } : undefined}
+            whileTap={canManageBoards ? { scale: 0.95 } : undefined}
+            onClick={() => {
+              if (canManageBoards) onOpenCreateBoardModal();
+            }}
+            disabled={!canManageBoards}
+            title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+            className={`bg-[#635FC7] text-white font-bold text-[15px] px-8 py-4 rounded-full transition-colors shadow-md ${
+              canManageBoards ? 'hover:bg-[#A8A4FF] cursor-pointer' : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             + Add New Board
           </motion.button>
@@ -319,10 +330,16 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
             This board is empty. Create a new column to get started.
           </p>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onOpenAddColumnModal}
-            className="bg-[#635FC7] hover:bg-[#A8A4FF] text-white font-bold text-[15px] px-8 py-4 rounded-full cursor-pointer transition-colors shadow-md"
+            whileHover={canManageColumns ? { scale: 1.05 } : undefined}
+            whileTap={canManageColumns ? { scale: 0.95 } : undefined}
+            onClick={() => {
+              if (canManageColumns) onOpenAddColumnModal();
+            }}
+            disabled={!canManageColumns}
+            title={!canManageColumns ? workspaceManagementPermissionMessage : undefined}
+            className={`bg-[#635FC7] text-white font-bold text-[15px] px-8 py-4 rounded-full transition-colors shadow-md ${
+              canManageColumns ? 'hover:bg-[#A8A4FF] cursor-pointer' : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             + Add New Column
           </motion.button>
@@ -472,18 +489,26 @@ export const BoardView: React.FC<BoardViewProps> = ({ onOpenAddColumnModal, onOp
         );
       })}
       <motion.div
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        onClick={onOpenAddColumnModal}
-        className="w-70 shrink-0 self-stretch mt-8 bg-linear-to-b from-[#E9EFFA] to-[#E9EFFA]/50 dark:from-[#22232E] dark:to-[#22232E]/50 rounded-md flex items-center justify-center cursor-pointer group transition-colors min-h-100"
+        whileHover={canManageColumns ? { scale: 1.01 } : undefined}
+        whileTap={canManageColumns ? { scale: 0.99 } : undefined}
+        onClick={canManageColumns ? onOpenAddColumnModal : undefined}
+        title={!canManageColumns ? workspaceManagementPermissionMessage : undefined}
+        className={`w-70 shrink-0 self-stretch mt-8 bg-linear-to-b from-[#E9EFFA] to-[#E9EFFA]/50 dark:from-[#22232E] dark:to-[#22232E]/50 rounded-md flex items-center justify-center group transition-colors min-h-100 ${
+          canManageColumns ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'
+        }`}
       >
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onOpenAddColumnModal();
+            if (canManageColumns) onOpenAddColumnModal();
           }}
-          className="text-[#828FA3] group-hover:text-[#635FC7] font-bold text-2xl transition-colors cursor-pointer"
+          disabled={!canManageColumns}
+          className={`font-bold text-2xl transition-colors ${
+            canManageColumns
+              ? 'text-[#828FA3] group-hover:text-[#635FC7] cursor-pointer'
+              : 'text-[#828FA3] cursor-not-allowed'
+          }`}
         >
           {t('board.newColumn')}
         </button>

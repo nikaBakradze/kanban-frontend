@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { SidebarSkeleton } from './Skeleton';
 import { useTranslation } from 'react-i18next';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { canManageBoard, workspaceManagementPermissionMessage } from '../utils/workspacePermissions';
 
 interface SidebarProps {
   onOpenNewBoardModal: () => void;
@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { boards, activeBoard, selectBoard, loading } = useKanban();
   const { t } = useTranslation();
   const { workspaces, activeWorkspace, selectWorkspace } = useWorkspace();
+  const canManageBoards = canManageBoard(activeWorkspace);
 
   return (
     <aside className="w-[280px] md:w-[300px] bg-white dark:bg-[#2B2C37] border-r border-[#E4E8F1] dark:border-[#3E3F4E] flex flex-col justify-between h-full shrink-0 pb-6 pr-4 md:pr-6 transition-colors duration-200">
@@ -95,10 +97,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onOpenNewBoardModal}
-            className="w-full flex items-center gap-4 pl-6 md:pl-8 py-3.5 text-[#635FC7] font-bold text-[15px] hover:opacity-80 transition-opacity cursor-pointer group"
+            whileHover={canManageBoards ? { scale: 1.02 } : undefined}
+            whileTap={canManageBoards ? { scale: 0.98 } : undefined}
+            onClick={() => {
+              if (canManageBoards) onOpenNewBoardModal();
+            }}
+            disabled={!canManageBoards}
+            title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+            className={`w-full flex items-center gap-4 pl-6 md:pl-8 py-3.5 text-[#635FC7] font-bold text-[15px] transition-opacity group ${
+              canManageBoards ? 'hover:opacity-80 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             <img
               src={createBoardActiveIcon}

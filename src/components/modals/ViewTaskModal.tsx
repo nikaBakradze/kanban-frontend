@@ -7,6 +7,8 @@ import type { Task, Subtask } from '../../types/kanban';
 import { EditTaskModal } from './EditTaskModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { canDeleteTask, workspaceManagementPermissionMessage } from '../../utils/workspacePermissions';
 
 interface ViewTaskModalProps {
   task: Task | null;
@@ -15,6 +17,8 @@ interface ViewTaskModalProps {
 
 export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) => {
   const { activeBoard, updateTaskInBoard, updateSubtaskInBoard, removeTaskFromBoard } = useKanban();
+  const { activeWorkspace } = useWorkspace();
+  const canDeleteCurrentTask = canDeleteTask(activeWorkspace);
   const { t } = useTranslation();
   const [showOptions, setShowOptions] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -86,6 +90,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
   };
 
   const handleConfirmDelete = async () => {
+    if (!canDeleteCurrentTask) return;
     try {
       await deleteTask(taskId);
       removeTaskFromBoard(taskId);
@@ -159,10 +164,17 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
                       <button
                         type="button"
                         onClick={() => {
+                          if (!canDeleteCurrentTask) return;
                           setShowOptions(false);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="w-full text-left text-sm font-semibold text-[#EA5555] hover:opacity-80 transition-opacity cursor-pointer"
+                        disabled={!canDeleteCurrentTask}
+                        title={!canDeleteCurrentTask ? workspaceManagementPermissionMessage : undefined}
+                        className={`w-full text-left text-sm font-semibold transition-opacity ${
+                          canDeleteCurrentTask
+                            ? 'text-[#EA5555] hover:opacity-80 cursor-pointer'
+                            : 'text-[#EA5555]/50 cursor-not-allowed'
+                        }`}
                       >
                         {t('modal.deleteTask')}
                       </button>
@@ -273,7 +285,7 @@ export const ViewTaskModal: React.FC<ViewTaskModalProps> = ({ task, onClose }) =
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
-        {isDeleteModalOpen && (
+        {isDeleteModalOpen && canDeleteCurrentTask && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

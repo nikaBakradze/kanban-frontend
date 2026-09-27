@@ -10,6 +10,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { assignTask } from '../../api/kanbanApi';
 import { getMembers } from '../../api/workspaceApi';
 import type { WorkspaceMember } from '../../types/workspace';
+import { canAssignTasks, workspaceManagementPermissionMessage } from '../../utils/workspacePermissions';
 
 interface EditTaskModalProps {
   task: Task | null;
@@ -28,6 +29,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
+  const canAssign = canAssignTasks(activeWorkspace);
 
   useEffect(() => {
     if (task) {
@@ -83,9 +85,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
         position: task.position,
         subtasks: formattedSubtasks,
       });
-      if (activeWorkspace?.type !== 'PERSONAL') await assignTask(taskId, assigneeIds);
+      if (activeWorkspace?.type !== 'PERSONAL' && canAssign) await assignTask(taskId, assigneeIds);
 
-      updateTaskInBoard({ ...updatedTask, assignee_ids: assigneeIds });
+      updateTaskInBoard({ ...updatedTask, assignee_ids: canAssign ? assigneeIds : task.assignee_ids });
       onClose();
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
@@ -131,12 +133,20 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onCl
               </div>
 
               {activeWorkspace?.type !== 'PERSONAL' && (
-                <div>
+                <div className={!canAssign ? 'opacity-55' : undefined}>
                   <label className="mb-2 block text-xs font-bold text-[#828FA3] dark:text-white">Assigned to</label>
-                  <div className="space-y-2">
+                  <div
+                    className={`space-y-2 ${!canAssign ? 'cursor-not-allowed' : ''}`}
+                    title={!canAssign ? workspaceManagementPermissionMessage : undefined}
+                  >
                     {members.map((member) => (
-                      <label key={member.user_id} className="flex items-center gap-2 text-sm text-[#000112] dark:text-white">
-                        <input type="checkbox" checked={assigneeIds.includes(member.user_id)} onChange={() => setAssigneeIds((ids) => ids.includes(member.user_id) ? ids.filter((id) => id !== member.user_id) : [...ids, member.user_id])} />
+                      <label key={member.user_id} className={`flex items-center gap-2 text-sm text-[#000112] dark:text-white ${!canAssign ? 'cursor-not-allowed' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={assigneeIds.includes(member.user_id)}
+                          disabled={!canAssign}
+                          onChange={() => setAssigneeIds((ids) => ids.includes(member.user_id) ? ids.filter((id) => id !== member.user_id) : [...ids, member.user_id])}
+                        />
                         {member.full_name || member.email}
                       </label>
                     ))}

@@ -4,6 +4,7 @@ import { useKanban } from '../../context/KanbanContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { canManageBoard, workspaceManagementPermissionMessage } from '../../utils/workspacePermissions';
 
 interface CreateBoardModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface CreateBoardModalProps {
 export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose }) => {
   const { fetchBoards } = useKanban();
   const { activeWorkspace } = useWorkspace();
+  const canManageBoards = canManageBoard(activeWorkspace);
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [columns, setColumns] = useState<string[]>(['Todo', 'Doing', 'Done']);
@@ -36,7 +38,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!canManageBoards || !title.trim()) return;
 
     try {
       setLoading(true);
@@ -87,7 +89,9 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
                   placeholder={t('modal.newBoardPlaceholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7]"
+                  disabled={!canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                  className="w-full px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -103,13 +107,20 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
                         type="text"
                         value={col}
                         onChange={(e) => handleColumnChange(index, e.target.value)}
-                        className="flex-1 px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7]"
+                        disabled={!canManageBoards}
+                        className="flex-1 px-4 py-2 text-sm border border-[#828FA3]/25 rounded bg-transparent text-[#000112] dark:text-white focus:outline-none focus:border-[#635FC7] disabled:opacity-50 disabled:cursor-not-allowed"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => handleRemoveColumn(index)}
-                        className="text-[#828FA3] hover:text-[#EA5555] font-bold cursor-pointer"
+                        disabled={!canManageBoards}
+                        title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                        className={`font-bold ${
+                          canManageBoards
+                            ? 'text-[#828FA3] hover:text-[#EA5555] cursor-pointer'
+                            : 'text-[#828FA3]/50 cursor-not-allowed'
+                        }`}
                       >
                         ✕
                       </button>
@@ -118,11 +129,15 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={canManageBoards ? { scale: 1.02 } : undefined}
+                  whileTap={canManageBoards ? { scale: 0.98 } : undefined}
                   type="button"
                   onClick={handleAddColumn}
-                  className="w-full mt-3 py-2 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full hover:bg-[#635FC7]/20 transition-colors cursor-pointer"
+                  disabled={!canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                  className={`w-full mt-3 py-2 text-sm font-bold text-[#635FC7] bg-[#635FC7]/10 dark:bg-white rounded-full transition-colors ${
+                    canManageBoards ? 'hover:bg-[#635FC7]/20 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   {t('common.addNewColumn')}
                 </motion.button>
@@ -130,11 +145,14 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onCl
 
               <div className="flex gap-4">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={canManageBoards && !loading ? { scale: 1.02 } : undefined}
+                  whileTap={canManageBoards && !loading ? { scale: 0.98 } : undefined}
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 py-2.5 md:py-2 text-sm font-bold text-white bg-[#635FC7] hover:bg-[#A8A4FF] rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                  disabled={loading || !canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                  className={`flex-1 py-2.5 md:py-2 text-sm font-bold text-white bg-[#635FC7] rounded-full transition-colors ${
+                    canManageBoards ? 'hover:bg-[#A8A4FF] cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                  }`}
                 >
                   {loading ? t('common.creating') : t('modal.createBoard')}
                 </motion.button>

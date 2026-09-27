@@ -8,6 +8,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { getMembers } from '../../api/workspaceApi';
 import { assignTask } from '../../api/kanbanApi';
 import type { WorkspaceMember } from '../../types/workspace';
+import { canAssignTasks, workspaceManagementPermissionMessage } from '../../utils/workspacePermissions';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
+  const canAssign = canAssignTasks(activeWorkspace);
 
   React.useEffect(() => {
     if (isOpen && activeWorkspace && activeWorkspace.type !== 'PERSONAL') void getMembers(activeWorkspace.id).then(setMembers);
@@ -58,8 +60,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
         column_id: targetColumnId,
         subtasks: filteredSubtasks.map((st) => ({ title: st })),
       });
-      if (activeWorkspace?.type !== 'PERSONAL' && assigneeIds.length) await assignTask(task.id, assigneeIds);
-      updateTaskInBoard({ ...task, assignee_ids: assigneeIds });
+      if (activeWorkspace?.type !== 'PERSONAL' && canAssign && assigneeIds.length) await assignTask(task.id, assigneeIds);
+      updateTaskInBoard({ ...task, assignee_ids: canAssign ? assigneeIds : [] });
 
       setTitle('');
       setDescription('');
@@ -109,12 +111,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose }) =
               </div>
 
               {activeWorkspace?.type !== 'PERSONAL' && (
-                <div>
+                <div className={!canAssign ? 'opacity-55' : undefined}>
                   <label className="mb-2 block text-xs font-bold text-[#828FA3] dark:text-white">Assigned to</label>
-                  <div className="space-y-2">
+                  <div
+                    className={`space-y-2 ${!canAssign ? 'cursor-not-allowed' : ''}`}
+                    title={!canAssign ? workspaceManagementPermissionMessage : undefined}
+                  >
                     {members.map((member) => (
-                      <label key={member.user_id} className="flex items-center gap-2 text-sm text-[#000112] dark:text-white">
-                        <input type="checkbox" checked={assigneeIds.includes(member.user_id)} onChange={() => setAssigneeIds((ids) => ids.includes(member.user_id) ? ids.filter((id) => id !== member.user_id) : [...ids, member.user_id])} />
+                      <label key={member.user_id} className={`flex items-center gap-2 text-sm text-[#000112] dark:text-white ${!canAssign ? 'cursor-not-allowed' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={assigneeIds.includes(member.user_id)}
+                          disabled={!canAssign}
+                          onChange={() => setAssigneeIds((ids) => ids.includes(member.user_id) ? ids.filter((id) => id !== member.user_id) : [...ids, member.user_id])}
+                        />
                         {member.full_name || member.email}
                       </label>
                     ))}

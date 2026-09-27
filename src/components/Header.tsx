@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import kanbanLogo from '../assets/kanban-logo.svg';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { canManageBoard, workspaceManagementPermissionMessage } from '../utils/workspacePermissions';
 
 interface HeaderProps {
   onOpenAddTaskModal: () => void;
@@ -17,6 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenEditBoardModal,
 }) => {
   const { activeBoard, fetchBoards } = useKanban();
+  const { activeWorkspace } = useWorkspace();
+  const canManageBoards = canManageBoard(activeWorkspace);
   const { t } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -26,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   const hasColumns = activeBoard?.columns && activeBoard.columns.length > 0;
 
   const handleDeleteBoard = async () => {
-    if (!boardId) return;
+    if (!boardId || !canManageBoards) return;
 
     try {
       setIsDeleting(true);
@@ -96,10 +100,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    if (!canManageBoards) return;
                     setShowMenu(false);
                     onOpenEditBoardModal();
                   }}
-                  className="w-full text-left text-sm font-semibold text-[#828FA3] hover:text-[#635FC7] transition-colors cursor-pointer"
+                  disabled={!canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                  className={`w-full text-left text-sm font-semibold transition-colors ${
+                    canManageBoards
+                      ? 'text-[#828FA3] hover:text-[#635FC7] cursor-pointer'
+                      : 'text-[#828FA3]/50 cursor-not-allowed'
+                  }`}
                 >
                   {t('header.editBoard')}
                 </button>
@@ -107,10 +118,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    if (!canManageBoards) return;
                     setShowMenu(false);
                     setIsDeleteModalOpen(true);
                   }}
-                  className="w-full text-left text-sm font-semibold text-[#EA5555] hover:opacity-80 transition-opacity cursor-pointer"
+                  disabled={!canManageBoards}
+                  title={!canManageBoards ? workspaceManagementPermissionMessage : undefined}
+                  className={`w-full text-left text-sm font-semibold transition-opacity ${
+                    canManageBoards
+                      ? 'text-[#EA5555] hover:opacity-80 cursor-pointer'
+                      : 'text-[#EA5555]/50 cursor-not-allowed'
+                  }`}
                 >
                   {t('header.deleteBoard')}
                 </button>
@@ -121,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
       </header>
 
       <AnimatePresence>
-        {isDeleteModalOpen && (
+        {isDeleteModalOpen && canManageBoards && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
