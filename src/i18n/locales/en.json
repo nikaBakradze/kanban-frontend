@@ -54,6 +54,26 @@
     "deleteBoardText": "Are you sure you want to delete the '{{title}}' board? This action will remove all columns and tasks and cannot be reversed.",
     "deleting": "Deleting..."
   },
+  "invitations": {
+    "title": "Workspace invitations",
+    "loading": "Loading invitations...",
+    "empty": "No pending invitations.",
+    "message": "{{inviter}} invited you to join {{workspace}}.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "working": "Working...",
+    "loadFailed": "Unable to load invitations.",
+    "responseFailed": "Unable to respond to this invitation."
+  },
+  "workspaceMembers": {
+    "inviteByEmail": "Invite by email",
+    "inviteByLink": "Invite by link",
+    "emailPlaceholder": "name@example.com",
+    "addMember": "Add Member",
+    "sendingInvite": "Sending...",
+    "inviteSent": "Invitation sent successfully.",
+    "inviteFailed": "Unable to send invitation."
+  },
   "board": { "dropHere": "Drop here", "newColumn": "+ New Column", "noDescription": "No description provided." },
   "modal": {
     "addBoard": "Add New Board",

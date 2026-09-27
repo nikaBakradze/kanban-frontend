@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { canManageBoard, workspaceManagementPermissionMessage } from '../utils/workspacePermissions';
+import { WorkspaceInvitationNotifications } from './WorkspaceInvitationNotifications';
 
 interface HeaderProps {
   onOpenAddTaskModal: () => void;
@@ -63,6 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-4 relative">
+          <WorkspaceInvitationNotifications />
           <LanguageSwitcher />
           <motion.button
             whileHover={{ scale: 1.02 }}

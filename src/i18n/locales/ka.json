@@ -22,6 +22,26 @@
     "deleteBoardText": "დარწმუნებული ხართ, რომ გსურთ '{{title}}' დაფის წაშლა? ყველა სვეტი და ამოცანა წაიშლება და მოქმედება ვერ გაუქმდება.",
     "deleting": "იშლება..."
   },
+  "invitations": {
+    "title": "სამუშაო სივრცის მოწვევები",
+    "loading": "მოწვევები იტვირთება...",
+    "empty": "მოლოდინში მოწვევა არ არის.",
+    "message": "{{inviter}} გიწვევთ {{workspace}} სივრცეში.",
+    "accept": "მიღება",
+    "decline": "უარყოფა",
+    "working": "მუშავდება...",
+    "loadFailed": "მოწვევების ჩატვირთვა ვერ მოხერხდა.",
+    "responseFailed": "მოწვევაზე პასუხი ვერ მოხერხდა."
+  },
+  "workspaceMembers": {
+    "inviteByEmail": "მოწვევა ელფოსტით",
+    "inviteByLink": "მოწვევა ბმულით",
+    "emailPlaceholder": "name@example.com",
+    "addMember": "წევრის დამატება",
+    "sendingInvite": "იგზავნება...",
+    "inviteSent": "მოწვევა წარმატებით გაიგზავნა.",
+    "inviteFailed": "მოწვევის გაგზავნა ვერ მოხერხდა."
+  },
   "board": { "dropHere": "აქ ჩამოაგდეთ", "newColumn": "+ ახალი სვეტი", "noDescription": "აღწერა არ არის მითითებული." },
   "modal": {
     "addBoard": "ახალი დაფის დამატება", "addTask": "ახალი ამოცანის დამატება", "addColumn": "ახალი სვეტის დამატება",

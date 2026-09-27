@@ -31,3 +31,13 @@ export interface InviteResponse {
   invite_url: string;
   expires_at: string | null;
 }
+
+export interface WorkspaceEmailInvitation {
+  id: number;
+  workspace_id: number;
+  workspace_name: string;
+  inviter_name: string;
+  created_at: string;
+}
+
+export type WorkspaceEmailInvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';

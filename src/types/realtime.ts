@@ -1,4 +1,5 @@
 import type { Board, Column, Subtask, Task } from './kanban';
+import type { WorkspaceEmailInvitation, WorkspaceEmailInvitationStatus } from './workspace';
 
 type BoardChange = {
   event: 'board.created' | 'board.updated';
@@ -39,3 +40,7 @@ export type WorkspaceRealtimeEvent = (BoardChange | BoardDeleted | ColumnCreated
   workspace_id: number;
   actor_id: number;
 };
+
+export type UserRealtimeEvent =
+  | { event: 'workspace.invitation.created'; payload: WorkspaceEmailInvitation }
+  | { event: 'workspace.invitation.updated'; payload: { invitation_id: number; status: WorkspaceEmailInvitationStatus } };

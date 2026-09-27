@@ -1,5 +1,5 @@
 import API from './axios';
-import type { InviteResponse, InviteValidation, Workspace, WorkspaceMember, WorkspaceType } from '../types/workspace';
+import type { InviteResponse, InviteValidation, Workspace, WorkspaceEmailInvitation, WorkspaceEmailInvitationStatus, WorkspaceMember, WorkspaceType } from '../types/workspace';
 
 export const getWorkspaces = async (): Promise<Workspace[]> => {
   const { data } = await API.get<Workspace[]>('/api/workspaces');
@@ -42,4 +42,22 @@ export const acceptInvite = async (token: string): Promise<{ workspace_id: numbe
 
 export const removeMember = async (workspaceId: number, memberId: number): Promise<void> => {
   await API.delete(`/api/workspaces/${workspaceId}/members/${memberId}`);
+};
+
+export const inviteUserByEmail = async (workspaceId: number, email: string): Promise<{ invitation_id: number }> => {
+  const { data } = await API.post<{ invitation_id: number }>(`/api/workspaces/${workspaceId}/invitations/email`, { email });
+  return data;
+};
+
+export const getPendingEmailInvitations = async (): Promise<WorkspaceEmailInvitation[]> => {
+  const { data } = await API.get<WorkspaceEmailInvitation[]>('/api/workspaces/invitations/pending');
+  return data;
+};
+
+export const respondToEmailInvitation = async (
+  invitationId: number,
+  action: 'accept' | 'decline',
+): Promise<{ invitation_id: number; workspace_id: number; workspace_name?: string; status: WorkspaceEmailInvitationStatus; role?: WorkspaceMember['role'] }> => {
+  const { data } = await API.post(`/api/workspaces/invitations/${invitationId}/respond`, { action });
+  return data;
 };

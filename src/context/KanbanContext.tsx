@@ -6,7 +6,7 @@ import { getBoards, getBoardById } from '../api/kanbanApi';
 import { useAuth } from './AuthContext';
 import { useWorkspace } from './WorkspaceContext';
 import { io, type Socket } from 'socket.io-client';
-import type { WorkspaceRealtimeEvent } from '../types/realtime';
+import type { UserRealtimeEvent, WorkspaceRealtimeEvent } from '../types/realtime';
 
 interface KanbanContextType {
   boards: Board[];
@@ -20,6 +20,8 @@ interface KanbanContextType {
   removeTaskFromBoard: (taskId: number) => void;
   updateSubtaskInBoard: (subtask: Subtask) => void;
   subscribeWorkspaceEvents: (listener: (event: WorkspaceRealtimeEvent) => void) => () => void;
+  subscribeUserEvents: (listener: (event: UserRealtimeEvent) => void) => () => void;
+  subscribeSocketReconnect: (listener: () => void) => () => void;
 }
 
 const KanbanContext = createContext<KanbanContextType | undefined>(undefined);
@@ -30,7 +32,6 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [boards, setBoards] = useState<Board[]>([]);
   const [activeBoard, setActiveBoardState] = useState<Board | null>(null);
   const [loading, setLoading] = useState(false);
-  const hasSharedWorkspace = Boolean(activeWorkspace && activeWorkspace.type !== 'PERSONAL');
   const activeBoardRef = useRef<Board | null>(null);
   const activeWorkspaceRef = useRef(activeWorkspace);
   const socketRef = useRef<Socket | null>(null);
@@ -38,6 +39,8 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const requestedWorkspaceRef = useRef<number | null>(null);
   const hasConnectedRef = useRef(false);
   const eventListenersRef = useRef(new Set<(event: WorkspaceRealtimeEvent) => void>());
+  const userEventListenersRef = useRef(new Set<(event: UserRealtimeEvent) => void>());
+  const socketReconnectListenersRef = useRef(new Set<() => void>());
 
   const setActiveBoard = useCallback((board: Board) => {
     activeBoardRef.current = board;
@@ -170,6 +173,20 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  const subscribeUserEvents = useCallback((listener: (event: UserRealtimeEvent) => void) => {
+    userEventListenersRef.current.add(listener);
+    return () => {
+      userEventListenersRef.current.delete(listener);
+    };
+  }, []);
+
+  const subscribeSocketReconnect = useCallback((listener: () => void) => {
+    socketReconnectListenersRef.current.add(listener);
+    return () => {
+      socketReconnectListenersRef.current.delete(listener);
+    };
+  }, []);
+
   const replaceBoard = useCallback((board: Board, activateIfEmpty: boolean) => {
     setBoards((current) => current.some((item) => item.id === board.id)
       ? current.map((item) => item.id === board.id ? board : item)
@@ -231,7 +248,7 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [addColumnToBoard, refreshWorkspaces, removeBoard, removeTaskFromBoard, replaceBoard, updateSubtaskInBoard, updateTaskInBoard, user?.id]);
 
   useEffect(() => {
-    if (authLoading || !user || !hasSharedWorkspace) return;
+    if (authLoading || !user) return;
     const token = localStorage.getItem('token');
     if (!token) return;
     const socketOrigin = new URL(import.meta.env.VITE_API_URL || window.location.origin, window.location.origin).origin;
@@ -243,6 +260,9 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socket.on('connect', () => {
       const wasConnected = hasConnectedRef.current;
       hasConnectedRef.current = true;
+      if (wasConnected) {
+        socketReconnectListenersRef.current.forEach((listener) => listener());
+      }
       const workspace = activeWorkspaceRef.current;
       if (!workspace || workspace.type === 'PERSONAL') return;
       requestedWorkspaceRef.current = workspace.id;
@@ -282,6 +302,9 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error('Workspace real-time connection failed:', error.message);
     });
     socket.on('workspace:event', applyWorkspaceEvent);
+    socket.on('user:notification', (event: UserRealtimeEvent) => {
+      userEventListenersRef.current.forEach((listener) => listener(event));
+    });
     socket.connect();
     return () => {
       socket.removeAllListeners();
@@ -291,7 +314,7 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       requestedWorkspaceRef.current = null;
       hasConnectedRef.current = false;
     };
-  }, [applyWorkspaceEvent, authLoading, hasSharedWorkspace, refreshWorkspaces, setActiveBoard, user]);
+  }, [applyWorkspaceEvent, authLoading, refreshWorkspaces, setActiveBoard, user]);
 
   useLayoutEffect(() => {
     const socket = socketRef.current;
@@ -324,7 +347,7 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <KanbanContext.Provider value={{
       boards, activeBoard, loading, fetchBoards, selectBoard, setActiveBoard,
       addColumnToBoard, updateTaskInBoard, removeTaskFromBoard, updateSubtaskInBoard,
-      subscribeWorkspaceEvents,
+      subscribeWorkspaceEvents, subscribeUserEvents, subscribeSocketReconnect,
     }}>
       {children}
     </KanbanContext.Provider>
