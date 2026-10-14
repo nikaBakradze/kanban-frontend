@@ -16,7 +16,7 @@ export function KanbanPreview() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: false, amount: 0.2 }}
       transition={{ duration: 0.65, delay: 0.15 }}
-      className="relative rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-[0_30px_90px_rgba(69,62,160,0.18)] dark:border-white/10 dark:bg-[#171a24]/90"
+      className="relative rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-[0_25px_50px_rgba(69,62,160,0.18)] dark:border-white/10 dark:bg-[#171a24]/90"
     >
       <div className="mb-5 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-white/10">
         <div className="flex items-center gap-2">

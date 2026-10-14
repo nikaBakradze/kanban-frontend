@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import 'flag-icons/css/flag-icons.min.css';
+import './flags.css';
 
 export const LanguageSwitcher = () => {
   const { i18n, t } = useTranslation();

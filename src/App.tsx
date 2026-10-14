@@ -22,15 +22,15 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
 
-  if (loading) return 
+  if (loading) return
   <div className="
-  min-h-screen 
-  text-white 
-  flex items-center 
+  min-h-screen
+  text-white
+  flex items-center
   justify-center">
     {t('common.loading')}
   </div>;
-  if (!user) return 
+  if (!user) return
   <Navigate to="/login" replace />;
 
   return children;
@@ -55,11 +55,11 @@ export default function App() {
 
     const fadeTimer = setTimeout(() => {
       setFadeOut(true);
-    }, 3000);
+    }, 1500);
 
     const removeTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 3700);
+    }, 2200);
 
     return () => {
       clearTimeout(logoTimer);
@@ -73,44 +73,42 @@ export default function App() {
     <Router>
       <MotionConfig reducedMotion="user">
         <AuthProvider>
-          <WorkspaceProvider>
-          <KanbanProvider>
-            {showSplash && (
-              <div
-                className={`fixed inset-0 z-9999 flex items-center justify-center bg-[#000000] transition-opacity ${
-                  shouldReduceMotion ? 'duration-0' : 'duration-700'
-                } ease-in-out ${
-                  fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                }`}
-              >
-                <div className="flex items-center space-x-5 relative">
-                  <img
-                    src={kanbanLogo}
-                    alt="Kanban Logo"
-                    className={`w-12 h-12 md:w-16 md:h-16 transition-all duration-700 ease-out transform ${
-                      showLogo
-                        ? 'opacity-100 scale-100 translate-x-0'
-                        : 'opacity-0 scale-50 -translate-x-10'
-                    }`}
-                    style={{
-                      transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-                    }}
-                  />
+          {showSplash && (
+            <div
+              className={`fixed inset-0 z-9999 flex items-center justify-center bg-[#000000] transition-opacity ${
+                shouldReduceMotion ? 'duration-0' : 'duration-700'
+              } ease-in-out ${
+                fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <div className="flex items-center space-x-5 relative">
+                <img
+                  src={kanbanLogo}
+                  alt="Kanban Logo"
+                  className={`w-12 h-12 md:w-16 md:h-16 transition-all duration-700 ease-out transform ${
+                    showLogo
+                      ? 'opacity-100 scale-100 translate-x-0'
+                      : 'opacity-0 scale-50 -translate-x-10'
+                  }`}
+                  style={{
+                    transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  }}
+                />
 
-                  <div
-                    className={`text-4xl md:text-6xl font-bold tracking-tight text-white transform transition-[transform,opacity] ${
-                      shouldReduceMotion ? 'duration-0' : 'duration-700'
-                    } ease-out ${
-                      revealText ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-                    }`}
-                  >
-                    Kanban
-                  </div>
+                <div
+                  className={`text-4xl md:text-6xl font-bold tracking-tight text-white transform transition-[transform,opacity] ${
+                    shouldReduceMotion ? 'duration-0' : 'duration-700'
+                  } ease-out ${
+                    revealText ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
+                  }`}
+                >
+                  Kanban
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-          <div 
+          <div
             className="min-h-screen bg-black bg-cover bg-center bg-no-repeat bg-fixed flex items-center justify-center p-4 relative overflow-hidden"
             style={{ backgroundImage: `url(${bgWebp})` }}
           >
@@ -123,15 +121,31 @@ export default function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<OtpVerificationDeck />} />
-                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                <Route path="/invite/:token" element={<InvitePage />} />
+                <Route path="/onboarding" element={
+                  <WorkspaceProvider>
+                    <ProtectedRoute>
+                      <Onboarding />
+                    </ProtectedRoute>
+                  </WorkspaceProvider>
+                } />
+                <Route path="/invite/:token" element={
+                  <WorkspaceProvider>
+                    <ProtectedRoute>
+                      <InvitePage />
+                    </ProtectedRoute>
+                  </WorkspaceProvider>
+                } />
 
                 <Route
                   path="/dashboard"
                   element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
+                    <WorkspaceProvider>
+                      <KanbanProvider>
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      </KanbanProvider>
+                    </WorkspaceProvider>
                   }
                 />
 
@@ -139,8 +153,6 @@ export default function App() {
               </Routes>
             </Suspense>
           </div>
-          </KanbanProvider>
-          </WorkspaceProvider>
         </AuthProvider>
       </MotionConfig>
     </Router>

@@ -127,13 +127,13 @@ export default function LandingPage() {
             className="
               pointer-events-none
               absolute
-              -left-24
-              top-8
-              h-72
-              w-72
+              -left-20
+              top-6
+              h-60
+              w-60
               rounded-full
-              bg-[#635FC7]/15
-              blur-3xl
+              bg-[#635FC7]/10
+              blur-lg
             "
           />
 
@@ -147,7 +147,7 @@ export default function LandingPage() {
             }}
             variants={revealFromBelow}
             transition={{
-              duration: 0.45,
+              duration: 0.35,
               ease: 'easeOut',
             }}
           >
@@ -329,21 +329,21 @@ export default function LandingPage() {
             }}
             variants={revealFromBelow}
             transition={{
-              duration: 0.55,
-              delay: 0.08,
+              duration: 0.45,
+              delay: 0.05,
               ease: 'easeOut',
             }}
           >
             <div
               className="
                 absolute
-                -inset-5
-                rounded-[38px]
+                -inset-3
+                rounded-[28px]
                 bg-linear-to-br
-                from-[#635FC7]/20
+                from-[#635FC7]/15
                 via-transparent
-                to-[#49A5D8]/15
-                blur-2xl
+                to-[#49A5D8]/10
+                blur
               "
             />
 
