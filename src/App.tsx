@@ -12,7 +12,7 @@ import Onboarding from './pages/Onboarding';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
 import { WorkspaceProvider } from './context/WorkspaceContext';
-import bgSvg from './assets/bg.svg';
+import bgWebp from './assets/bg.webp';
 import kanbanLogo from './assets/kanban-logo.svg';
 import { MotionConfig, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -102,7 +102,7 @@ export default function App() {
 
           <div 
             className="min-h-screen bg-black bg-cover bg-center bg-no-repeat bg-fixed flex items-center justify-center p-4 relative overflow-hidden"
-            style={{ backgroundImage: `url(${bgSvg})` }}
+            style={{ backgroundImage: `url(${bgWebp})` }}
           >
             <Routes>
               <Route path="/" element={<LandingPage />} />
