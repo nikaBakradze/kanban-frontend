@@ -22,14 +22,23 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
 
-  if (loading) return <div className="min-h-screen text-white flex items-center justify-center">{t('common.loading')}</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) return 
+  <div className="
+  min-h-screen 
+  text-white 
+  flex items-center 
+  justify-center">
+    {t('common.loading')}
+  </div>;
+  if (!user) return 
+  <Navigate to="/login" replace />;
 
   return children;
 };
 
 export default function App() {
   const shouldReduceMotion = useReducedMotion();
+  const { t } = useTranslation();
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [revealText, setRevealText] = useState(false);
