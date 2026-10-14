@@ -1,14 +1,5 @@
-import { useState, useEffect, type JSX } from 'react';
+import { lazy, Suspense, useState, useEffect, type JSX } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import NotFound from './pages/NotFound';
-import OtpVerificationDeck from './components/auth/OtpVerificationDeck';
-import LandingPage from './pages/LandingPage';
-import InvitePage from './pages/InvitePage';
-import Onboarding from './pages/Onboarding';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
 import { WorkspaceProvider } from './context/WorkspaceContext';
@@ -16,6 +7,16 @@ import bgWebp from './assets/bg.webp';
 import kanbanLogo from './assets/kanban-logo.svg';
 import { MotionConfig, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+
+const AuthRoute = lazy(() => import('./pages/AuthRoute'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const OtpVerificationDeck = lazy(() => import('./components/auth/OtpVerificationDeck'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const InvitePage = lazy(() => import('./pages/InvitePage'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
@@ -104,28 +105,30 @@ export default function App() {
             className="min-h-screen bg-black bg-cover bg-center bg-no-repeat bg-fixed flex items-center justify-center p-4 relative overflow-hidden"
             style={{ backgroundImage: `url(${bgWebp})` }}
           >
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/register" element={<Auth />} />
-              <Route path="/registration" element={<Auth />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify-email" element={<OtpVerificationDeck />} />
-              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-              <Route path="/invite/:token" element={<InvitePage />} />
-              
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+            <Suspense fallback={<div className="min-h-screen text-white flex items-center justify-center">{t('common.loading')}</div>}>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<AuthRoute />} />
+                <Route path="/register" element={<AuthRoute />} />
+                <Route path="/registration" element={<AuthRoute />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email" element={<OtpVerificationDeck />} />
+                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                <Route path="/invite/:token" element={<InvitePage />} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </div>
           </KanbanProvider>
           </WorkspaceProvider>
