@@ -5,7 +5,6 @@ import type { Board, Column, Task, Subtask } from '../types/kanban';
 import { getBoards, getBoardById } from '../api/kanbanApi';
 import { useAuth } from './AuthContext';
 import { useWorkspace } from './WorkspaceContext';
-import { io, type Socket } from 'socket.io-client';
 import type { UserRealtimeEvent, WorkspaceRealtimeEvent } from '../types/realtime';
 
 interface KanbanContextType {
@@ -252,72 +251,77 @@ export const KanbanProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const token = localStorage.getItem('token');
     if (!token) return;
     const socketOrigin = new URL(import.meta.env.VITE_API_URL || window.location.origin, window.location.origin).origin;
-    const socket = io(socketOrigin, {
-      autoConnect: false,
-      auth: { token },
-    });
-    socketRef.current = socket;
-    socket.on('connect', () => {
-      const wasConnected = hasConnectedRef.current;
-      hasConnectedRef.current = true;
-      if (wasConnected) {
-        socketReconnectListenersRef.current.forEach((listener) => listener());
-      }
-      const workspace = activeWorkspaceRef.current;
-      if (!workspace || workspace.type === 'PERSONAL') return;
-      requestedWorkspaceRef.current = workspace.id;
-      socket.emit('workspace:join', workspace.id, (result: { ok: boolean }) => {
-        if (!result.ok) {
-          if (requestedWorkspaceRef.current === workspace.id) requestedWorkspaceRef.current = null;
-          console.error('Workspace real-time subscription was denied.');
-          if (activeWorkspaceRef.current?.id === workspace.id) {
-            void refreshWorkspaces().catch((error: unknown) => {
-              console.error('Failed to refresh workspace membership:', error);
+
+    // Dynamically import socket.io-client to reduce main bundle size
+    import('socket.io-client').then(({ io }) => {
+      const socket = io(socketOrigin, {
+        autoConnect: false,
+        auth: { token },
+      });
+      socketRef.current = socket;
+      socket.on('connect', () => {
+        const wasConnected = hasConnectedRef.current;
+        hasConnectedRef.current = true;
+        if (wasConnected) {
+          socketReconnectListenersRef.current.forEach((listener) => listener());
+        }
+        const workspace = activeWorkspaceRef.current;
+        if (!workspace || workspace.type === 'PERSONAL') return;
+        requestedWorkspaceRef.current = workspace.id;
+        socket.emit('workspace:join', workspace.id, (result: { ok: boolean }) => {
+          if (!result.ok) {
+            if (requestedWorkspaceRef.current === workspace.id) requestedWorkspaceRef.current = null;
+            console.error('Workspace real-time subscription was denied.');
+            if (activeWorkspaceRef.current?.id === workspace.id) {
+              void refreshWorkspaces().catch((error: unknown) => {
+                console.error('Failed to refresh workspace membership:', error);
+              });
+            }
+            return;
+          }
+          joinedWorkspaceRef.current = workspace.id;
+          if (!wasConnected) return;
+          const currentBoard = activeBoardRef.current;
+          if (currentBoard?.workspace_id === workspace.id) {
+            void getBoardById(currentBoard.id).then(setActiveBoard).catch((error: unknown) => {
+              console.error('Failed to recover the active board after reconnecting:', error);
+              void fetchBoardsRef.current().catch((refreshError: unknown) => {
+                console.error('Failed to refresh boards after reconnecting:', refreshError);
+              });
+            });
+          } else {
+            void fetchBoardsRef.current().catch((error: unknown) => {
+              console.error('Failed to refresh boards after reconnecting:', error);
             });
           }
-          return;
-        }
-        joinedWorkspaceRef.current = workspace.id;
-        if (!wasConnected) return;
-        const currentBoard = activeBoardRef.current;
-        if (currentBoard?.workspace_id === workspace.id) {
-          void getBoardById(currentBoard.id).then(setActiveBoard).catch((error: unknown) => {
-            console.error('Failed to recover the active board after reconnecting:', error);
-            void fetchBoardsRef.current().catch((refreshError: unknown) => {
-              console.error('Failed to refresh boards after reconnecting:', refreshError);
-            });
-          });
-        } else {
-          void fetchBoardsRef.current().catch((error: unknown) => {
-            console.error('Failed to refresh boards after reconnecting:', error);
-          });
-        }
+        });
       });
+      socket.on('disconnect', () => {
+        joinedWorkspaceRef.current = null;
+        requestedWorkspaceRef.current = null;
+      });
+      socket.on('connect_error', (error) => {
+        console.error('Workspace real-time connection failed:', error.message);
+      });
+      socket.on('workspace:event', applyWorkspaceEvent);
+      socket.on('user:notification', (event: UserRealtimeEvent) => {
+        userEventListenersRef.current.forEach((listener) => listener(event));
+      });
+      socket.connect();
+      return () => {
+        socket.removeAllListeners();
+        socket.disconnect();
+        socketRef.current = null;
+        joinedWorkspaceRef.current = null;
+        requestedWorkspaceRef.current = null;
+        hasConnectedRef.current = false;
+      };
     });
-    socket.on('disconnect', () => {
-      joinedWorkspaceRef.current = null;
-      requestedWorkspaceRef.current = null;
-    });
-    socket.on('connect_error', (error) => {
-      console.error('Workspace real-time connection failed:', error.message);
-    });
-    socket.on('workspace:event', applyWorkspaceEvent);
-    socket.on('user:notification', (event: UserRealtimeEvent) => {
-      userEventListenersRef.current.forEach((listener) => listener(event));
-    });
-    socket.connect();
-    return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
-      socketRef.current = null;
-      joinedWorkspaceRef.current = null;
-      requestedWorkspaceRef.current = null;
-      hasConnectedRef.current = false;
-    };
   }, [applyWorkspaceEvent, authLoading, refreshWorkspaces, setActiveBoard, user]);
 
   useLayoutEffect(() => {
     const socket = socketRef.current;
+    // Check if socket is initialized and connected
     if (!socket?.connected) return;
     const previousWorkspaceId = joinedWorkspaceRef.current ?? requestedWorkspaceRef.current;
     if (previousWorkspaceId && previousWorkspaceId !== activeWorkspace?.id) {
