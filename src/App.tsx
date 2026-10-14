@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect, type JSX } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth, AuthProvider } from './context/AuthContext';
+import { useAuthStatus, AuthProvider } from './context/AuthContext';
 import { KanbanProvider } from './context/KanbanContext';
 import { WorkspaceProvider } from './context/WorkspaceContext';
 import bgWebp from './assets/bg.webp';
@@ -19,7 +19,7 @@ const InvitePage = lazy(() => import('./pages/InvitePage'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthStatus();
   const { t } = useTranslation();
 
   if (loading) return
