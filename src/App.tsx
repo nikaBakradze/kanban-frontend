@@ -17,21 +17,23 @@ const OtpVerificationDeck = lazy(() => import('./components/auth/OtpVerification
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const InvitePage = lazy(() => import('./pages/InvitePage'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuthStatus();
   const { t } = useTranslation();
 
-  if (loading) return
-  <div className="
-  min-h-screen
-  text-white
-  flex items-center
-  justify-center">
-    {t('common.loading')}
-  </div>;
-  if (!user) return
-  <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="min-h-screen text-white flex items-center justify-center">
+        {t('common.loading')}
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return children;
 };
@@ -121,6 +123,11 @@ export default function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<OtpVerificationDeck />} />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                } />
                 <Route path="/onboarding" element={
                   <WorkspaceProvider>
                     <ProtectedRoute>
